@@ -85,7 +85,7 @@ void Terrain::UpdateLayerBits()
         const auto patch = _patches[pathIndex];
         if (patch->HasCollision())
         {
-            PhysicsBackend::SetShapeFilterMask(patch->_physicsShape, mask0, mask1);
+            PhysicsBackend::SetShapeFilterMask(patch->_shape, mask0, mask1);
         }
     }
 }
@@ -297,7 +297,7 @@ void Terrain::SetPhysicalMaterials(const Array<JsonAssetReference<PhysicalMateri
     {
         const auto patch = _patches.Get()[pathIndex];
         if (patch->HasCollision())
-            PhysicsBackend::SetShapeMaterials(patch->_physicsShape, ToSpan(materials, 8));
+            PhysicsBackend::SetShapeMaterials(patch->_shape, ToSpan(materials, 8));
     }
 }
 
@@ -842,9 +842,9 @@ void Terrain::OnEnable()
     for (int32 i = 0; i < _patches.Count(); i++)
     {
         auto patch = _patches[i];
-        if (patch->_physicsActor)
+        if (patch->_staticActor)
         {
-            PhysicsBackend::AddSceneActor(scene, patch->_physicsActor);
+            PhysicsBackend::AddSceneActor(scene, patch->_staticActor);
         }
     }
 
@@ -863,9 +863,9 @@ void Terrain::OnDisable()
     for (int32 i = 0; i < _patches.Count(); i++)
     {
         auto patch = _patches[i];
-        if (patch->_physicsActor)
+        if (patch->_staticActor)
         {
-            PhysicsBackend::RemoveSceneActor(scene, patch->_physicsActor);
+            PhysicsBackend::RemoveSceneActor(scene, patch->_staticActor);
         }
     }
 
@@ -919,7 +919,7 @@ void Terrain::OnActiveInTreeChanged()
         const auto patch = _patches[pathIndex];
         if (patch->HasCollision())
         {
-            PhysicsBackend::SetShapeState(patch->_physicsShape, IsActiveInHierarchy(), false);
+            PhysicsBackend::SetShapeState(patch->_shape, IsActiveInHierarchy(), false);
         }
     }
 }

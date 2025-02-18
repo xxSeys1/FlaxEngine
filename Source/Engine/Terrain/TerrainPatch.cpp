@@ -60,7 +60,7 @@ struct TerrainCollisionDataHeader
 };
 
 TerrainPatch::TerrainPatch(const SpawnParams& params)
-    : ScriptingObject(params)
+    : Collider(params)
 {
 }
 
@@ -69,8 +69,8 @@ void TerrainPatch::Init(Terrain* terrain, int16 x, int16 z)
     ScopeLock lock(_collisionLocker);
 
     _terrain = terrain;
-    _physicsShape = nullptr;
-    _physicsActor = nullptr;
+    _shape = nullptr;
+    _staticActor = nullptr;
     _physicsHeightField = nullptr;
     _x = x;
     _z = z;
@@ -149,10 +149,10 @@ void TerrainPatch::UpdateTransform()
     PROFILE_CPU();
 
     // Update physics
-    if (_physicsActor)
+    if (_staticActor)
     {
         const Transform& terrainTransform = _terrain->_transform;
-        PhysicsBackend::SetRigidActorPose(_physicsActor, terrainTransform.LocalToWorld(_offset), terrainTransform.Orientation);
+        PhysicsBackend::SetRigidActorPose(_staticActor, terrainTransform.LocalToWorld(_offset), terrainTransform.Orientation);
     }
 
     // Update chunks cache
@@ -1001,6 +1001,7 @@ bool TerrainPatch::SetupHeightMap(int32 heightMapLength, const float* heightMap,
 
     // Update data
     _yOffset = info.PatchOffset;
+    _center = Vector3(0, _yOffset * _terrain->_transform.Scale.Y, 0);
     _yHeight = info.PatchHeight;
     for (int32 chunkIndex = 0; chunkIndex < Terrain::ChunksCount; chunkIndex++)
     {
@@ -1452,6 +1453,7 @@ bool TerrainPatch::ModifyHeightMap(const float* samples, const Int2& modifiedOff
 
     // Update all the stuff
     _yOffset = info.PatchOffset;
+    _center = Vector3(0, _yOffset * _terrain->_transform.Scale.Y, 0);
     _yHeight = info.PatchHeight;
     for (int32 chunkIndex = 0; chunkIndex < Terrain::ChunksCount; chunkIndex++)
     {
@@ -1976,24 +1978,24 @@ bool TerrainPatch::UpdateCollision()
 bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, float& resultHitDistance, float maxDistance) const
 {
     CHECK_RETURN_DEBUG(direction.IsNormalized(), false);
-    if (_physicsShape == nullptr)
+    if (_shape == nullptr)
         return false;
     Vector3 shapePos;
     Quaternion shapeRot;
-    PhysicsBackend::GetShapePose(_physicsShape, shapePos, shapeRot);
-    return PhysicsBackend::RayCastShape(_physicsShape, shapePos, shapeRot, origin, direction, resultHitDistance, maxDistance);
+    PhysicsBackend::GetShapePose(_shape, shapePos, shapeRot);
+    return PhysicsBackend::RayCastShape(_shape, shapePos, shapeRot, origin, direction, resultHitDistance, maxDistance);
 }
 
 bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, float& resultHitDistance, Vector3& resultHitNormal, float maxDistance) const
 {
     CHECK_RETURN_DEBUG(direction.IsNormalized(), false);
-    if (_physicsShape == nullptr)
+    if (_shape == nullptr)
         return false;
     Vector3 shapePos;
     Quaternion shapeRot;
-    PhysicsBackend::GetShapePose(_physicsShape, shapePos, shapeRot);
+    PhysicsBackend::GetShapePose(_shape, shapePos, shapeRot);
     RayCastHit hit;
-    if (PhysicsBackend::RayCastShape(_physicsShape, shapePos, shapeRot, origin, direction, hit, maxDistance))
+    if (PhysicsBackend::RayCastShape(_shape, shapePos, shapeRot, origin, direction, hit, maxDistance))
     {
         resultHitDistance = hit.Distance;
         resultHitNormal = hit.Normal;
@@ -2005,15 +2007,15 @@ bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, floa
 bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, float& resultHitDistance, TerrainChunk*& resultChunk, float maxDistance) const
 {
     CHECK_RETURN_DEBUG(direction.IsNormalized(), false);
-    if (_physicsShape == nullptr)
+    if (_shape == nullptr)
         return false;
     Vector3 shapePos;
     Quaternion shapeRot;
-    PhysicsBackend::GetShapePose(_physicsShape, shapePos, shapeRot);
+    PhysicsBackend::GetShapePose(_shape, shapePos, shapeRot);
 
     // Perform raycast test
     float hitDistance;
-    if (PhysicsBackend::RayCastShape(_physicsShape, shapePos, shapeRot, origin, direction, hitDistance, maxDistance))
+    if (PhysicsBackend::RayCastShape(_shape, shapePos, shapeRot, origin, direction, hitDistance, maxDistance))
     {
         // Find hit chunk
         resultChunk = nullptr;
@@ -2043,26 +2045,26 @@ bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, floa
 bool TerrainPatch::RayCast(const Vector3& origin, const Vector3& direction, RayCastHit& hitInfo, float maxDistance) const
 {
     CHECK_RETURN_DEBUG(direction.IsNormalized(), false);
-    if (_physicsShape == nullptr)
+    if (_shape == nullptr)
         return false;
     Vector3 shapePos;
     Quaternion shapeRot;
-    PhysicsBackend::GetShapePose(_physicsShape, shapePos, shapeRot);
-    return PhysicsBackend::RayCastShape(_physicsShape, shapePos, shapeRot, origin, direction, hitInfo, maxDistance);
+    PhysicsBackend::GetShapePose(_shape, shapePos, shapeRot);
+    return PhysicsBackend::RayCastShape(_shape, shapePos, shapeRot, origin, direction, hitInfo, maxDistance);
 }
 
 void TerrainPatch::ClosestPoint(const Vector3& position, Vector3& result) const
 {
-    if (_physicsShape == nullptr)
+    if (_shape == nullptr)
     {
         result = Vector3::Maximum;
         return;
     }
     Vector3 shapePos;
     Quaternion shapeRot;
-    PhysicsBackend::GetShapePose(_physicsShape, shapePos, shapeRot);
+    PhysicsBackend::GetShapePose(_shape, shapePos, shapeRot);
     Vector3 closestPoint;
-    const float distanceSqr = PhysicsBackend::ComputeShapeSqrDistanceToPoint(_physicsShape, shapePos, shapeRot, position, &closestPoint);
+    const float distanceSqr = PhysicsBackend::ComputeShapeSqrDistanceToPoint(_shape, shapePos, shapeRot, position, &closestPoint);
     if (distanceSqr > 0.0f)
         result = closestPoint;
     else
@@ -2135,15 +2137,15 @@ void TerrainPatch::CreateCollision()
     JsonAsset* materials[8];
     for (int32 i = 0; i < 8; i++)
         materials[i] = _terrain->GetPhysicalMaterials()[i];
-    _physicsShape = PhysicsBackend::CreateShape(_terrain, shape, ToSpan(materials, 8), _terrain->IsActiveInHierarchy(), false);
-    PhysicsBackend::SetShapeLocalPose(_physicsShape, Vector3(0, _yOffset * terrainTransform.Scale.Y, 0), Quaternion::Identity);
+    _shape = PhysicsBackend::CreateShape(this, shape, ToSpan(materials, 8), _terrain->IsActiveInHierarchy(), false);
+    PhysicsBackend::SetShapeLocalPose(_shape, _center, Quaternion::Identity);
 
     // Create static actor
     void* scene = _terrain->GetPhysicsScene()->GetPhysicsScene();
-    _physicsActor = PhysicsBackend::CreateRigidStaticActor(nullptr, terrainTransform.LocalToWorld(_offset), terrainTransform.Orientation, scene);
-    PhysicsBackend::AttachShape(_physicsShape, _physicsActor);
+    _staticActor = PhysicsBackend::CreateRigidStaticActor(nullptr, terrainTransform.LocalToWorld(_offset), terrainTransform.Orientation, scene);
+    PhysicsBackend::AttachShape(_shape, _staticActor);
     if (_terrain->IsDuringPlay())
-        PhysicsBackend::AddSceneActor(scene, _physicsActor);
+        PhysicsBackend::AddSceneActor(scene, _staticActor);
 }
 
 bool TerrainPatch::CreateHeightField()
@@ -2196,8 +2198,8 @@ void TerrainPatch::UpdateCollisionScale() const
     geometry.SetHeightField(_physicsHeightField, heightScale, rowScale, columnScale);
 
     // Update shape
-    PhysicsBackend::SetShapeGeometry(_physicsShape, geometry);
-    PhysicsBackend::SetShapeLocalPose(_physicsShape, Vector3(0, _yOffset * terrainTransform.Scale.Y, 0), Quaternion::Identity);
+    PhysicsBackend::SetShapeGeometry(_shape, geometry);
+    PhysicsBackend::SetShapeLocalPose(_shape, _center, Quaternion::Identity);
 }
 
 void TerrainPatch::DestroyCollision()
@@ -2208,13 +2210,13 @@ void TerrainPatch::DestroyCollision()
 
     void* scene = _terrain->GetPhysicsScene()->GetPhysicsScene();
     PhysicsBackend::RemoveCollider(_terrain);
-    PhysicsBackend::RemoveSceneActor(scene, _physicsActor);
-    PhysicsBackend::DestroyActor(_physicsActor);
-    PhysicsBackend::DestroyShape(_physicsShape);
+    PhysicsBackend::RemoveSceneActor(scene, _staticActor);
+    PhysicsBackend::DestroyActor(_staticActor);
+    PhysicsBackend::DestroyShape(_shape);
     PhysicsBackend::DestroyObject(_physicsHeightField);
 
-    _physicsActor = nullptr;
-    _physicsShape = nullptr;
+    _staticActor = nullptr;
+    _shape = nullptr;
     _physicsHeightField = nullptr;
 #if TERRAIN_USE_PHYSICS_DEBUG
     _debugLinesDirty = true;
@@ -2310,7 +2312,7 @@ void TerrainPatch::DrawPhysicsDebug(RenderView& view)
 {
 #if COMPILE_WITH_DEBUG_DRAW
     const BoundingBox bounds(_bounds.Minimum - view.Origin, _bounds.Maximum - view.Origin);
-    if (!_physicsShape || !view.CullingFrustum.Intersects(bounds))
+    if (!_shape || !view.CullingFrustum.Intersects(bounds))
         return;
     if (view.Mode == ViewMode::PhysicsColliders)
     {
@@ -2340,7 +2342,7 @@ void TerrainPatch::DrawPhysicsDebug(RenderView& view)
 const Array<Vector3>& TerrainPatch::GetCollisionTriangles()
 {
     ScopeLock lock(_collisionLocker);
-    if (!_physicsShape || _collisionTriangles.HasItems())
+    if (!_shape || _collisionTriangles.HasItems())
         return _collisionTriangles;
     PROFILE_CPU();
 
@@ -2494,7 +2496,7 @@ void TerrainPatch::ExtractCollisionGeometry(Array<Float3>& vertexBuffer, Array<i
     indexBuffer.Clear();
 
     ScopeLock lock(_collisionLocker);
-    if (!_physicsShape)
+    if (!_shape)
         return;
 
     int32 rows, cols;
@@ -2613,7 +2615,18 @@ void TerrainPatch::Deserialize(DeserializeStream& stream, ISerializeModifier* mo
 
 void TerrainPatch::OnPhysicsSceneChanged(PhysicsScene* previous)
 {
-    PhysicsBackend::RemoveSceneActor(previous->GetPhysicsScene(), _physicsActor, true);
+    PhysicsBackend::RemoveSceneActor(previous->GetPhysicsScene(), _staticActor, true);
     void* scene = _terrain->GetPhysicsScene()->GetPhysicsScene();
-    PhysicsBackend::AddSceneActor(scene, _physicsActor);
+    PhysicsBackend::AddSceneActor(scene, _staticActor);
+}
+
+RigidBody* TerrainPatch::GetAttachedRigidBody() const
+{
+    // Terrains are always static things
+    return nullptr;
+}
+
+void TerrainPatch::GetGeometry(CollisionShape& collision)
+{
+    // Unused
 }
