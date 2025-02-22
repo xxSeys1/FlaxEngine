@@ -8,7 +8,6 @@
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Level/Scene/Lightmap.h"
 #include "Engine/Content/Assets/RawDataAsset.h"
-#include "Engine/Physics/Colliders/Collider.h"
 
 struct RayCastHit;
 class TerrainMaterialShader;
@@ -16,7 +15,7 @@ class TerrainMaterialShader;
 /// <summary>
 /// Represents single terrain patch made of 16 terrain chunks.
 /// </summary>
-API_CLASS(Sealed, NoSpawn) class FLAXENGINE_API TerrainPatch : public Collider
+API_CLASS(Sealed, NoSpawn) class FLAXENGINE_API TerrainPatch : public ScriptingObject, public ISerializable
 {
     DECLARE_SCRIPTING_TYPE(TerrainPatch);
     friend Terrain;
@@ -30,6 +29,8 @@ private:
     BoundingBox _bounds;
     Float3 _offset;
     AssetReference<RawDataAsset> _heightfield;
+    void* _physicsShape;
+    void* _physicsActor;
     void* _physicsHeightField;
     CriticalSection _collisionLocker;
     float _collisionScaleXZ;
@@ -393,7 +394,7 @@ private:
     /// </summary>
     FORCE_INLINE bool HasCollision() const
     {
-        return _shape != nullptr;
+        return _physicsShape != nullptr;
     }
 
     /// <summary>
@@ -434,9 +435,4 @@ public:
     // [ISerializable]
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
-
-public:
-    // [Collider]
-    RigidBody* GetAttachedRigidBody() const;
-    void GetGeometry(CollisionShape& collision);
 };
