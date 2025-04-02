@@ -200,6 +200,11 @@ void WheeledVehicle::SetSteering(float value)
     _steering = Math::Clamp(value, -1.0f, 1.0f);
 }
 
+float WheeledVehicle::GetSteering()
+{
+    return _steering;
+}
+
 void WheeledVehicle::SetBrake(float value)
 {
     value = Math::Saturate(value);
@@ -208,9 +213,19 @@ void WheeledVehicle::SetBrake(float value)
     _tankRightBrake = value;
 }
 
+float WheeledVehicle::GetBrake()
+{
+    return _brake;
+}
+
 void WheeledVehicle::SetHandbrake(float value)
 {
     _handBrake = Math::Saturate(value);
+}
+
+float WheeledVehicle::GetHandbrake()
+{
+    return _handBrake;
 }
 
 void WheeledVehicle::SetTankLeftThrottle(float value)
@@ -418,6 +433,12 @@ void WheeledVehicle::OnDebugDrawSelected()
             if (!data.State.IsInAir)
             {
                 DEBUG_DRAW_WIRE_SPHERE(BoundingSphere(data.State.TireContactPoint, 5.0f), Color::Green, 0, false);
+            }
+
+            if (DisplayWheelInfo)
+            {
+                const String text = String::Format(TEXT("Index: {}\nCollider: {}"), wheelIndex, wheel.Collider->GetName());
+                DEBUG_DRAW_TEXT(text, currentPos, WheelInfoColor, 10, 0);
             }
         }
     }
