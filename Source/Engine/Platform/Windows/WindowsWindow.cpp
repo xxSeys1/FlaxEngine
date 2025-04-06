@@ -1304,13 +1304,13 @@ LRESULT WindowsWindow::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
             Close(ClosingReason::User);
             return 0;
         }
-        if (wParam == VK_RETURN)
-        {
-            LOG(Info, "Alt+Enter pressed");
-            SetIsFullscreen(!IsFullscreen());
-            return 0;
-        }
-        break;
+        //if (wParam == VK_RETURN)
+        //{
+        //    LOG(Info, "Alt+Enter pressed");
+        //    SetIsFullscreen(!IsFullscreen());
+        //    return 0;
+        //}
+        //break;
     case WM_POWERBROADCAST:
         switch (wParam)
         {
