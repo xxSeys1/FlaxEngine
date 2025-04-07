@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -67,6 +67,7 @@ protected:
 #if TRACY_ENABLE
                     ZoneScoped;
                     ZoneName(*name, name.Length());
+                    ZoneValue(chunk->LocationInFile.Size / 1024); // Size in kB
 #endif
                     if (ref->Storage->LoadAssetChunk(chunk))
                     {

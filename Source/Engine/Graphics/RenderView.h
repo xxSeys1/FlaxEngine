@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -279,17 +279,14 @@ public:
     /// </summary>
     void UpdateCachedData();
 
-    // Set up view with custom params
-    // @param viewProjection View * Projection matrix
+    // Setups view with custom params.
     void SetUp(const Matrix& viewProjection);
 
-    // Set up view with custom params
-    // @param view View matrix
-    // @param projection Projection matrix
+    // Setups view with custom params.
     void SetUp(const Matrix& view, const Matrix& projection);
 
     /// <summary>
-    /// Set up view for cube rendering
+    /// Setups view for cube rendering.
     /// </summary>
     /// <param name="nearPlane">Near plane</param>
     /// <param name="farPlane">Far plane</param>
@@ -297,13 +294,13 @@ public:
     void SetUpCube(float nearPlane, float farPlane, const Float3& position);
 
     /// <summary>
-    /// Set up view for given face of the cube rendering
+    /// Setups view for given face of the cube rendering.
     /// </summary>
     /// <param name="faceIndex">Face index(0-5)</param>
     void SetFace(int32 faceIndex);
 
     /// <summary>
-    /// Set up view for cube rendering
+    /// Setups view for cube rendering.
     /// </summary>
     /// <param name="nearPlane">Near plane</param>
     /// <param name="farPlane">Far plane</param>

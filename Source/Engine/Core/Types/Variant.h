@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -423,6 +423,7 @@ private:
     void AllocStructure();
     void CopyStructure(void* src);
     void FreeStructure();
+    static Variant Enum(const VariantType& type, const uint64 value);
 };
 
 namespace Math

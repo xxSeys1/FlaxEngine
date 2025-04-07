@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -925,7 +925,7 @@ namespace FlaxEditor.Windows
         /// <returns>True if can build, otherwise false.</returns>
         public bool CanBuild(PlatformType platformType)
         {
-            if (_buildTabProxy.PerPlatformOptions.TryGetValue(platformType, out var platform))
+            if (_buildTabProxy != null && _buildTabProxy.PerPlatformOptions.TryGetValue(platformType, out var platform))
                 return platform.IsAvailable && platform.IsSupported;
             return false;
         }

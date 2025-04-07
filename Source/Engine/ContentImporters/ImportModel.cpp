@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "ImportModel.h"
 
@@ -133,8 +133,10 @@ void RepackMeshLightmapUVs(ModelData& data)
                 {
                     Float2 uvOffset(entry.Slot->X * atlasSizeInv, entry.Slot->Y * atlasSizeInv);
                     Float2 uvScale(entry.Slot->Width * atlasSizeInv, entry.Slot->Height * atlasSizeInv);
-                    // TODO: SIMD
-                    for (auto& uv : entry.Mesh->LightmapUVs)
+                    if (entry.Mesh->LightmapUVsIndex == -1)
+                        continue;
+                    auto& lightmapUVs = entry.Mesh->UVs[entry.Mesh->LightmapUVsIndex];
+                    for (auto& uv : lightmapUVs)
                     {
                         uv = uv * uvScale + uvOffset;
                     }
@@ -568,40 +570,31 @@ CreateAssetResult ImportModel::Create(CreateAssetContext& context)
     return CreateModel(context, modelData);
 }
 
-CreateAssetResult ImportModel::CreateModel(CreateAssetContext& context, ModelData& modelData, const Options* options)
+CreateAssetResult ImportModel::CreateModel(CreateAssetContext& context, const ModelData& modelData, const Options* options)
 {
     PROFILE_CPU();
     IMPORT_SETUP(Model, Model::SerializedVersion);
+    static_assert(Model::SerializedVersion == 30, "Update code.");
 
     // Save model header
     MemoryWriteStream stream(4096);
-    if (modelData.Pack2ModelHeader(&stream))
+    if (Model::SaveHeader(stream, modelData))
         return CreateAssetResult::Error;
     if (context.AllocateChunk(0))
         return CreateAssetResult::CannotAllocateChunk;
-    context.Data.Header.Chunks[0]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+    context.Data.Header.Chunks[0]->Data.Copy(ToSpan(stream));
 
     // Pack model LODs data
-    const auto lodCount = modelData.GetLODsCount();
+    const auto lodCount = modelData.LODs.Count();
     for (int32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
     {
         stream.SetPosition(0);
-
-        // Pack meshes
-        auto& meshes = modelData.LODs[lodIndex].Meshes;
-        for (int32 meshIndex = 0; meshIndex < meshes.Count(); meshIndex++)
-        {
-            if (meshes[meshIndex]->Pack2Model(&stream))
-            {
-                LOG(Warning, "Cannot pack mesh.");
-                return CreateAssetResult::Error;
-            }
-        }
-
-        const int32 chunkIndex = lodIndex + 1;
+        if (Model::SaveLOD(stream, modelData, lodIndex))
+            return CreateAssetResult::Error;
+        const int32 chunkIndex = MODEL_LOD_TO_CHUNK_INDEX(lodIndex);
         if (context.AllocateChunk(chunkIndex))
             return CreateAssetResult::CannotAllocateChunk;
-        context.Data.Header.Chunks[chunkIndex]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+        context.Data.Header.Chunks[chunkIndex]->Data.Copy(ToSpan(stream));
     }
 
     // Generate SDF
@@ -612,59 +605,48 @@ CreateAssetResult ImportModel::CreateModel(CreateAssetContext& context, ModelDat
         {
             if (context.AllocateChunk(15))
                 return CreateAssetResult::CannotAllocateChunk;
-            context.Data.Header.Chunks[15]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+            context.Data.Header.Chunks[15]->Data.Copy(ToSpan(stream));
         }
     }
 
     return CreateAssetResult::Ok;
 }
 
-CreateAssetResult ImportModel::CreateSkinnedModel(CreateAssetContext& context, ModelData& modelData, const Options* options)
+CreateAssetResult ImportModel::CreateSkinnedModel(CreateAssetContext& context, const ModelData& modelData, const Options* options)
 {
     PROFILE_CPU();
     IMPORT_SETUP(SkinnedModel, SkinnedModel::SerializedVersion);
+    static_assert(SkinnedModel::SerializedVersion == 30, "Update code.");
 
     // Save skinned model header
     MemoryWriteStream stream(4096);
-    if (modelData.Pack2SkinnedModelHeader(&stream))
+    if (SkinnedModel::SaveHeader(stream, modelData))
         return CreateAssetResult::Error;
     if (context.AllocateChunk(0))
         return CreateAssetResult::CannotAllocateChunk;
-    context.Data.Header.Chunks[0]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+    context.Data.Header.Chunks[0]->Data.Copy(ToSpan(stream));
 
     // Pack model LODs data
-    const auto lodCount = modelData.GetLODsCount();
+    const auto lodCount = modelData.LODs.Count();
     for (int32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
     {
         stream.SetPosition(0);
-
-        // Mesh Data Version
-        stream.WriteByte(1);
-
-        // Pack meshes
-        auto& meshes = modelData.LODs[lodIndex].Meshes;
-        for (int32 meshIndex = 0; meshIndex < meshes.Count(); meshIndex++)
-        {
-            if (meshes[meshIndex]->Pack2SkinnedModel(&stream))
-            {
-                LOG(Warning, "Cannot pack mesh.");
-                return CreateAssetResult::Error;
-            }
-        }
-
-        const int32 chunkIndex = lodIndex + 1;
+        if (SkinnedModel::SaveLOD(stream, modelData, lodIndex, SkinnedModel::SaveMesh))
+            return CreateAssetResult::Error;
+        const int32 chunkIndex = MODEL_LOD_TO_CHUNK_INDEX(lodIndex);
         if (context.AllocateChunk(chunkIndex))
             return CreateAssetResult::CannotAllocateChunk;
-        context.Data.Header.Chunks[chunkIndex]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+        context.Data.Header.Chunks[chunkIndex]->Data.Copy(ToSpan(stream));
     }
 
     return CreateAssetResult::Ok;
 }
 
-CreateAssetResult ImportModel::CreateAnimation(CreateAssetContext& context, ModelData& modelData, const Options* options)
+CreateAssetResult ImportModel::CreateAnimation(CreateAssetContext& context, const ModelData& modelData, const Options* options)
 {
     PROFILE_CPU();
     IMPORT_SETUP(Animation, Animation::SerializedVersion);
+    static_assert(Animation::SerializedVersion == 1, "Update code.");
 
     // Save animation data
     MemoryWriteStream stream(8182);
@@ -679,16 +661,16 @@ CreateAssetResult ImportModel::CreateAnimation(CreateAssetContext& context, Mode
                 animIndex = i;
         }
     }
-    if (modelData.Pack2AnimationHeader(&stream, animIndex))
+    if (Animation::SaveHeader(modelData, stream, animIndex))
         return CreateAssetResult::Error;
     if (context.AllocateChunk(0))
         return CreateAssetResult::CannotAllocateChunk;
-    context.Data.Header.Chunks[0]->Data.Copy(stream.GetHandle(), stream.GetPosition());
+    context.Data.Header.Chunks[0]->Data.Copy(ToSpan(stream));
 
     return CreateAssetResult::Ok;
 }
 
-CreateAssetResult ImportModel::CreatePrefab(CreateAssetContext& context, ModelData& data, const Options& options, const Array<PrefabObject>& prefabObjects)
+CreateAssetResult ImportModel::CreatePrefab(CreateAssetContext& context, const ModelData& data, const Options& options, const Array<PrefabObject>& prefabObjects)
 {
     PROFILE_CPU();
     if (data.Nodes.Count() == 0)

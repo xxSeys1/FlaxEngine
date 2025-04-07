@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "Particles.h"
 #include "ParticleEffect.h"
@@ -14,6 +14,7 @@
 #include "Engine/Graphics/DynamicBuffer.h"
 #include "Engine/Graphics/GPUContext.h"
 #include "Engine/Graphics/RenderTools.h"
+#include "Engine/Graphics/Shaders/GPUVertexLayout.h"
 #include "Engine/Profiler/ProfilerCPU.h"
 #include "Engine/Renderer/DrawCall.h"
 #include "Engine/Renderer/RenderList.h"
@@ -49,17 +50,22 @@ public:
     {
         if (VB)
             return false;
-        VB = GPUDevice::Instance->CreateBuffer(TEXT("SpriteParticleRenderer,VB"));
+        VB = GPUDevice::Instance->CreateBuffer(TEXT("SpriteParticleRenderer.VB"));
         IB = GPUDevice::Instance->CreateBuffer(TEXT("SpriteParticleRenderer.IB"));
-        static SpriteParticleVertex vertexBuffer[] =
+        SpriteParticleVertex vertexBuffer[] =
         {
             { -0.5f, -0.5f, 0.0f, 0.0f },
             { +0.5f, -0.5f, 1.0f, 0.0f },
             { +0.5f, +0.5f, 1.0f, 1.0f },
             { -0.5f, +0.5f, 0.0f, 1.0f },
         };
-        static uint16 indexBuffer[] = { 0, 1, 2, 0, 2, 3, };
-        return VB->Init(GPUBufferDescription::Vertex(sizeof(SpriteParticleVertex), VertexCount, vertexBuffer)) || IB->Init(GPUBufferDescription::Index(sizeof(uint16), IndexCount, indexBuffer));
+        uint16 indexBuffer[] = { 0, 1, 2, 0, 2, 3, };
+        auto layout = GPUVertexLayout::Get({
+            { VertexElement::Types::Position, 0, 0, 0, PixelFormat::R32G32_Float },
+            { VertexElement::Types::TexCoord, 0, 0, 0, PixelFormat::R32G32_Float },
+        });
+        return VB->Init(GPUBufferDescription::Vertex(layout, sizeof(SpriteParticleVertex), VertexCount, vertexBuffer)) ||
+               IB->Init(GPUBufferDescription::Index(sizeof(uint16), IndexCount, indexBuffer));
     }
 
     void Dispose()
@@ -88,6 +94,16 @@ PACK_STRUCT(struct RibbonParticleVertex {
     uint32 PrevParticleIndex;
     float Distance;
     // TODO: pack into half/uint16 data
+
+    static GPUVertexLayout* GetLayout()
+    {
+        return GPUVertexLayout::Get({
+            { VertexElement::Types::TexCoord0, 0, 0, 0, PixelFormat::R32_UInt },
+            { VertexElement::Types::TexCoord1, 0, 0, 0, PixelFormat::R32_UInt },
+            { VertexElement::Types::TexCoord2, 0, 0, 0, PixelFormat::R32_UInt },
+            { VertexElement::Types::TexCoord3, 0, 0, 0, PixelFormat::R32_Float },
+        });
+    }
     });
 
 struct EmitterCache
@@ -303,7 +319,7 @@ void DrawEmitterCPU(RenderContext& renderContext, ParticleBuffer* buffer, DrawCa
         else
             buffer->GPU.RibbonIndexBufferDynamic->Clear();
         if (!buffer->GPU.RibbonVertexBufferDynamic)
-            buffer->GPU.RibbonVertexBufferDynamic = New<DynamicVertexBuffer>(0, (uint32)sizeof(RibbonParticleVertex), TEXT("RibbonVertexBufferDynamic"));
+            buffer->GPU.RibbonVertexBufferDynamic = New<DynamicVertexBuffer>(0, (uint32)sizeof(RibbonParticleVertex), TEXT("RibbonVertexBufferDynamic"), RibbonParticleVertex::GetLayout());
         else
             buffer->GPU.RibbonVertexBufferDynamic->Clear();
         auto& indexBuffer = buffer->GPU.RibbonIndexBufferDynamic->Data;
@@ -607,7 +623,7 @@ void DrawEmitterGPU(RenderContext& renderContext, ParticleBuffer* buffer, DrawCa
     auto emitter = buffer->Emitter;
 
     // Check if need to perform any particles sorting
-    if (emitter->Graph.SortModules.HasItems() && renderContext.View.Pass != DrawPass::Depth)
+    if (emitter->Graph.SortModules.HasItems() && renderContext.View.Pass != DrawPass::Depth && buffer->GPU.ParticlesCountMax != 0)
     {
         PROFILE_GPU_CPU_NAMED("Sort Particles");
 

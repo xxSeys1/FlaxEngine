@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -552,5 +552,5 @@ private:
     static bool loadScene(JsonAsset* sceneAsset);
     static bool loadScene(const BytesContainer& sceneData, Scene** outScene = nullptr);
     static bool loadScene(rapidjson_flax::Document& document, Scene** outScene = nullptr);
-    static bool loadScene(rapidjson_flax::Value& data, int32 engineBuild, Scene** outScene = nullptr);
+    static bool loadScene(rapidjson_flax::Value& data, int32 engineBuild, Scene** outScene = nullptr, const String* assetPath = nullptr);
 };

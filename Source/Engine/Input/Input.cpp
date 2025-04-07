@@ -1,11 +1,10 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "Input.h"
 #include "InputSettings.h"
 #include "Keyboard.h"
 #include "Mouse.h"
 #include "Gamepad.h"
-#include "FlaxEngine.Gen.h"
 #include "Engine/Platform/Window.h"
 #include "Engine/Engine/Engine.h"
 #include "Engine/Engine/EngineService.h"

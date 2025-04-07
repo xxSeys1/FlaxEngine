@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -94,6 +94,8 @@ public:
         __builtin_prefetch(static_cast<char const*>(ptr));
     }
     static bool Is64BitPlatform();
+    static String GetSystemName();
+    static Version GetSystemVersion();
     static CPUInfo GetCPUInfo();
     static MemoryStats GetMemoryStats();
     static ProcessMemoryStats GetProcessMemoryStats();

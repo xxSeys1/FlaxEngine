@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -98,7 +98,7 @@ API_CLASS(Namespace="FlaxEngine.Tools", Static) class FLAXENGINE_API ModelTool
 
     // Optional: inputModel or modelData
     // Optional: outputSDF or null, outputStream or null
-    static bool GenerateModelSDF(class Model* inputModel, class ModelData* modelData, float resolutionScale, int32 lodIndex, ModelBase::SDFData* outputSDF, class MemoryWriteStream* outputStream, const StringView& assetName, float backfacesThreshold = 0.6f, bool useGPU = true);
+    static bool GenerateModelSDF(class Model* inputModel, const class ModelData* modelData, float resolutionScale, int32 lodIndex, ModelBase::SDFData* outputSDF, class MemoryWriteStream* outputStream, const StringView& assetName, float backfacesThreshold = 0.6f, bool useGPU = true);
 
 #if USE_EDITOR
 
@@ -183,7 +183,7 @@ public:
         API_FIELD(Attributes="EditorOrder(70), EditorDisplay(\"Geometry\", \"Import LODs\"), VisibleIf(nameof(ShowGeometry))")
         bool ImportLODs = true;
         // Enable/disable importing vertex colors (channel 0 only).
-        API_FIELD(Attributes="EditorOrder(80), EditorDisplay(\"Geometry\"), VisibleIf(nameof(ShowModel))")
+        API_FIELD(Attributes="EditorOrder(80), EditorDisplay(\"Geometry\"), VisibleIf(nameof(ShowGeometry))")
         bool ImportVertexColors = true;
         // Enable/disable importing blend shapes (morph targets).
         API_FIELD(Attributes="EditorOrder(85), EditorDisplay(\"Geometry\"), VisibleIf(nameof(ShowSkinnedModel))")

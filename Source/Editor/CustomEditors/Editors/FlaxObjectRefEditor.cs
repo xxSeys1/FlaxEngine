@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Linq;
@@ -405,20 +405,9 @@ namespace FlaxEditor.CustomEditors.Editors
 
                 // Select object
                 if (_value is Actor actor)
-                {
-                    if (PresenterContext is PropertiesWindow)
-                        Editor.Instance.SceneEditing.Select(actor);
-                    else if (PresenterContext is PrefabWindow prefabWindow)
-                        prefabWindow.Select(prefabWindow.Graph.Root.Find(actor));
-                }
+                    Select(actor);
                 else if (_value is Script script && script.Actor)
-                {
-                    var a = script.Actor;
-                    if (PresenterContext is PropertiesWindow)
-                        Editor.Instance.SceneEditing.Select(a);
-                    else if (PresenterContext is PrefabWindow prefabWindow)
-                        prefabWindow.Select(prefabWindow.Graph.Root.Find(a));
-                }
+                    Select(script.Actor);
                 else if (_value is Asset asset)
                     Editor.Instance.Windows.ContentWin.Select(asset);
             }
@@ -434,6 +423,14 @@ namespace FlaxEditor.CustomEditors.Editors
             // Picker dropdown menu
             if (_supportsPickDropDown)
                 ShowDropDownMenu();
+        }
+
+        private void Select(Actor actor)
+        {
+            if (PresenterContext is PropertiesWindow)
+                Editor.Instance.SceneEditing.Select(actor);
+            else if (PresenterContext is PrefabWindow prefabWindow)
+                prefabWindow.Select(prefabWindow.Graph.Root.Find(actor));
         }
 
         private void DoDrag()

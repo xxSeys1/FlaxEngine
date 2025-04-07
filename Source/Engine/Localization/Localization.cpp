@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "Localization.h"
 #include "CultureInfo.h"
@@ -79,6 +79,17 @@ void LocalizationSettings::Apply()
 {
     Instance.OnLocalizationChanged();
 }
+
+#if USE_EDITOR
+
+void LocalizationSettings::Serialize(SerializeStream& stream, const void* otherObj)
+{
+    SERIALIZE_GET_OTHER_OBJ(LocalizationSettings);
+    SERIALIZE(LocalizedStringTables);
+    SERIALIZE(DefaultFallbackLanguage);
+}
+
+#endif
 
 void LocalizationSettings::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
 {

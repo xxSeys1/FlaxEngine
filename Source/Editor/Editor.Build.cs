@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -42,6 +42,8 @@ public class Editor : EditorModule
         options.ScriptingAPI.SystemReferences.Add("System.Text.RegularExpressions");
         options.ScriptingAPI.SystemReferences.Add("System.IO.Compression.ZipFile");
         options.ScriptingAPI.SystemReferences.Add("System.Diagnostics.Process");
+        if (Profiler.Use(options))
+            options.ScriptingAPI.Defines.Add("USE_PROFILER");
 
         // Enable optimizations for Editor, disable this for debugging the editor
         if (options.Configuration == TargetConfiguration.Development)

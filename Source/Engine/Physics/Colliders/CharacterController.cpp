@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "CharacterController.h"
 #include "Engine/Physics/Colliders/Collider.h"
@@ -131,6 +131,11 @@ void CharacterController::SetMinMoveDistance(float value)
     _minMoveDistance = Math::Max(value, 0.0f);
 }
 
+void CharacterController::SetAutoGravity(bool value)
+{
+    _autoGravity = value;
+}
+
 Vector3 CharacterController::GetVelocity() const
 {
     return _controller ? PhysicsBackend::GetRigidDynamicActorLinearVelocity(PhysicsBackend::GetControllerRigidDynamicActor(_controller)) : Vector3::Zero;
@@ -261,7 +266,15 @@ void CharacterController::UpdateBounds()
 
 void CharacterController::AddMovement(const Vector3& translation, const Quaternion& rotation)
 {
-    Move(translation);
+    Vector3 displacement = translation;
+    if (_autoGravity)
+    {
+        // Apply gravity
+        const float deltaTime = Time::GetCurrentSafe()->DeltaTime.GetTotalSeconds();
+        displacement += GetPhysicsScene()->GetGravity() * deltaTime;
+    }
+
+    Move(displacement);
 
     if (!rotation.IsIdentity())
     {

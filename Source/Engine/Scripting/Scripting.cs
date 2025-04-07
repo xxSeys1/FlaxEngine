@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections;
@@ -249,7 +249,13 @@ namespace FlaxEngine
 
         internal static ManagedHandle VersionToManaged(int major, int minor, int build, int revision)
         {
-            Version version = new Version(major, minor, Math.Max(build, 0), Math.Max(revision, 0));
+            Version version;
+            if (revision >= 0)
+                version = new Version(major, minor, Math.Max(build, 0), revision);
+            else if (build >= 0)
+                version = new Version(major, minor, build);
+            else
+                version = new Version(major, minor);
             return ManagedHandle.Alloc(version);
         }
 
@@ -260,15 +266,6 @@ namespace FlaxEngine
             lcid = 0;
 #endif
             return ManagedHandle.Alloc(new CultureInfo(lcid));
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct VersionNative
-        {
-            public int Major;
-            public int Minor;
-            public int Build;
-            public int Revision;
         }
 
         internal static void VersionToNative(ManagedHandle versionHandle, ref int major, ref int minor, ref int build, ref int revision)
@@ -333,7 +330,8 @@ namespace FlaxEngine
 
             lock (UpdateActions)
             {
-                for (int i = 0; i < UpdateActions.Count; i++)
+                int count = UpdateActions.Count;
+                for (int i = 0; i < count; i++)
                 {
                     try
                     {
@@ -344,7 +342,18 @@ namespace FlaxEngine
                         Debug.LogException(ex);
                     }
                 }
-                UpdateActions.Clear();
+                int newlyAdded = UpdateActions.Count - count;
+                if (newlyAdded == 0)
+                    UpdateActions.Clear();
+                else
+                {
+                    // Someone added another action within current callback
+                    var tmp = new List<Action>();
+                    for (int i = newlyAdded; i < UpdateActions.Count; i++)
+                        tmp.Add(UpdateActions[i]);
+                    UpdateActions.Clear();
+                    UpdateActions.AddRange(tmp);
+                }
             }
 
             MainThreadTaskScheduler.Execute();

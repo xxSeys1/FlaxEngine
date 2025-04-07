@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "TerrainPatch.h"
 #include "Terrain.h"
@@ -2245,7 +2245,7 @@ void TerrainPatch::CacheDebugLines()
     typedef DebugDraw::Vertex Vertex;
     if (_debugLines->GetElementsCount() != count)
     {
-        if (_debugLines->Init(GPUBufferDescription::Vertex(sizeof(Vertex), count)))
+        if (_debugLines->Init(GPUBufferDescription::Vertex(Vertex::GetLayout(), sizeof(Vertex), count)))
             return;
     }
     Array<Vertex> debugLines;

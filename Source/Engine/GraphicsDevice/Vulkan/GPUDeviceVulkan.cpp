@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #if GRAPHICS_API_VULKAN
 
@@ -14,6 +14,7 @@
 #include "GPUTimerQueryVulkan.h"
 #include "GPUBufferVulkan.h"
 #include "GPUSamplerVulkan.h"
+#include "GPUVertexLayoutVulkan.h"
 #include "GPUSwapChainVulkan.h"
 #include "RenderToolsVulkan.h"
 #include "QueueVulkan.h"
@@ -461,6 +462,18 @@ uint32 GetHash(const FramebufferVulkan::Key& key)
     return hash;
 }
 
+GPUVertexLayoutVulkan::GPUVertexLayoutVulkan(GPUDeviceVulkan* device, const Elements& elements, bool explicitOffsets)
+    : GPUResourceVulkan<GPUVertexLayout>(device, StringView::Empty)
+{
+    SetElements(elements, explicitOffsets);
+    MaxSlot = 0;
+    for (int32 i = 0; i < elements.Count(); i++)
+    {
+        const VertexElement& src = GetElements().Get()[i];
+        MaxSlot = Math::Max(MaxSlot, (int32)src.Slot);
+    }
+}
+
 FramebufferVulkan::FramebufferVulkan(GPUDeviceVulkan* device, const Key& key, const VkExtent2D& extent, uint32 layers)
     : Device(device)
     , Handle(VK_NULL_HANDLE)
@@ -499,6 +512,7 @@ RenderPassVulkan::RenderPassVulkan(GPUDeviceVulkan* device, const RenderTargetLa
     : Device(device)
     , Handle(VK_NULL_HANDLE)
     , Layout(layout)
+    , CanDepthWrite(true)
 {
     const int32 colorAttachmentsCount = layout.RTsCount;
     const bool hasDepthStencilAttachment = layout.DepthFormat != PixelFormat::Unknown;
@@ -585,6 +599,8 @@ RenderPassVulkan::RenderPassVulkan(GPUDeviceVulkan* device, const RenderTargetLa
         depthStencilReference.attachment = colorAttachmentsCount;
         depthStencilReference.layout = depthStencilLayout;
         subpassDesc.pDepthStencilAttachment = &depthStencilReference;
+        if (!layout.WriteDepth && !layout.WriteStencil)
+            CanDepthWrite = false;
     }
 
     VkRenderPassCreateInfo createInfo;
@@ -887,14 +903,20 @@ GPUTextureVulkan* HelperResourcesVulkan::GetDummyTexture(SpirvShaderResourceType
     return texture;
 }
 
-GPUBufferVulkan* HelperResourcesVulkan::GetDummyBuffer()
+GPUBufferVulkan* HelperResourcesVulkan::GetDummyBuffer(PixelFormat format)
 {
-    if (!_dummyBuffer)
+    if (!_dummyBuffers)
     {
-        _dummyBuffer = (GPUBufferVulkan*)_device->CreateBuffer(TEXT("DummyBuffer"));
-        _dummyBuffer->Init(GPUBufferDescription::Buffer(sizeof(int32) * 256, GPUBufferFlags::ShaderResource | GPUBufferFlags::UnorderedAccess, PixelFormat::R32_SInt));
+        _dummyBuffers = (GPUBufferVulkan**)Allocator::Allocate((int32)PixelFormat::MAX * sizeof(void*));
+        Platform::MemoryClear(_dummyBuffers, (int32)PixelFormat::MAX * sizeof(void*));
     }
-    return _dummyBuffer;
+    auto& dummyBuffer = _dummyBuffers[(int32)format];
+    if (!dummyBuffer)
+    {
+        dummyBuffer = (GPUBufferVulkan*)_device->CreateBuffer(TEXT("DummyBuffer"));
+        dummyBuffer->Init(GPUBufferDescription::Buffer(PixelFormatExtensions::SizeInBytes(format) * 256, GPUBufferFlags::ShaderResource | GPUBufferFlags::UnorderedAccess, format));
+    }
+    return dummyBuffer;
 }
 
 GPUBufferVulkan* HelperResourcesVulkan::GetDummyVertexBuffer()
@@ -902,7 +924,8 @@ GPUBufferVulkan* HelperResourcesVulkan::GetDummyVertexBuffer()
     if (!_dummyVB)
     {
         _dummyVB = (GPUBufferVulkan*)_device->CreateBuffer(TEXT("DummyVertexBuffer"));
-        _dummyVB->Init(GPUBufferDescription::Vertex(sizeof(Color32), 1, &Color32::Transparent));
+        auto* layout = GPUVertexLayout::Get({{ VertexElement::Types::Attribute3, 0, 0, 0, PixelFormat::R8G8B8A8_UNorm }});
+        _dummyVB->Init(GPUBufferDescription::Vertex(layout, sizeof(Color32), 1, &Color32::Transparent));
     }
     return _dummyVB;
 }
@@ -919,9 +942,18 @@ GPUConstantBuffer* HelperResourcesVulkan::GetDummyConstantBuffer()
 void HelperResourcesVulkan::Dispose()
 {
     SAFE_DELETE_GPU_RESOURCES(_dummyTextures);
-    SAFE_DELETE_GPU_RESOURCE(_dummyBuffer);
     SAFE_DELETE_GPU_RESOURCE(_dummyVB);
     SAFE_DELETE_GPU_RESOURCE(_dummyCB);
+    if (_dummyBuffers)
+    {
+        for (int32 i = 0; i < (int32)PixelFormat::MAX; i++)
+        {
+            if (GPUBufferVulkan* buffer = _dummyBuffers[i])
+                Delete(buffer);
+        }
+        Allocator::Free(_dummyBuffers);
+        _dummyBuffers = nullptr;
+    }
 
     for (int32 i = 0; i < ARRAY_COUNT(_staticSamplers); i++)
     {
@@ -1241,11 +1273,11 @@ GPUDevice* GPUDeviceVulkan::Create()
         return nullptr;
     }
     uint32 vendorId = 0;
-    if (CommandLine::Options.NVIDIA)
+    if (CommandLine::Options.NVIDIA.IsTrue())
         vendorId = GPU_VENDOR_ID_NVIDIA;
-    else if (CommandLine::Options.AMD)
+    else if (CommandLine::Options.AMD.IsTrue())
         vendorId = GPU_VENDOR_ID_AMD;
-    else if (CommandLine::Options.Intel)
+    else if (CommandLine::Options.Intel.IsTrue())
         vendorId = GPU_VENDOR_ID_INTEL;
     if (vendorId != 0)
     {
@@ -2089,6 +2121,11 @@ GPUBuffer* GPUDeviceVulkan::CreateBuffer(const StringView& name)
 GPUSampler* GPUDeviceVulkan::CreateSampler()
 {
     return New<GPUSamplerVulkan>(this);
+}
+
+GPUVertexLayout* GPUDeviceVulkan::CreateVertexLayout(const VertexElements& elements, bool explicitOffsets)
+{
+    return New<GPUVertexLayoutVulkan>(this, elements, explicitOffsets);
 }
 
 GPUSwapChain* GPUDeviceVulkan::CreateSwapChain(Window* window)

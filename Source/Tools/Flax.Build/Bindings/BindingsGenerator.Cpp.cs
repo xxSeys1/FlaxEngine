@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -1207,6 +1207,7 @@ namespace Flax.Build.Bindings
             string callReturnCount = "";
             if (returnTypeIsContainer)
             {
+                // Array marshallers need to know amount of items written in the buffer
                 callReturnCount = indent;
                 if (returnType.Type == "Span" || returnType.Type == "BytesContainer")
                     callReturnCount += "*__returnCount = {0}.Length();";
@@ -1349,6 +1350,7 @@ namespace Flax.Build.Bindings
 #if USE_NETCORE
                                     if (parameterInfo.Type.Type == "Array")
                                     {
+                                        // Array marshallers need to know amount of items written in the buffer
                                         contents.Append(indent).AppendFormat("*__{0}Count = {1}.Count();", parameterInfo.Name, parameterInfo.Name + "Temp").AppendLine();
                                     }
 #endif
@@ -1368,6 +1370,8 @@ namespace Flax.Build.Bindings
                                 if (parameterInfo.Type.Type == "BytesContainer" && parameterInfo.Type.GenericArgs == null)
                                 {
                                     contents.Append(indent).AppendFormat("MCore::GC::WriteRef({0}, (MObject*){1});", parameterInfo.Name, value).AppendLine();
+
+                                    // Array marshallers need to know amount of items written in the buffer
                                     contents.Append(indent).AppendFormat("*__{0}Count = {1}.Length();", parameterInfo.Name, parameterInfo.Name + "Temp").AppendLine();
                                     continue;
                                 }
@@ -1376,6 +1380,13 @@ namespace Flax.Build.Bindings
                             }
                         }
                         contents.Append(indent).AppendFormat("*{0} = {1};", parameterInfo.Name, value).AppendLine();
+#if USE_NETCORE
+                        if (parameterInfo.Type.Type == "Array")
+                        {
+                            // Array marshallers need to know amount of items written in the buffer
+                            contents.Append(indent).AppendFormat("*__{0}Count = {1}.Count();", parameterInfo.Name, parameterInfo.Name + "Temp").AppendLine();
+                        }
+#endif
                     }
                 }
             }
@@ -1822,6 +1833,12 @@ namespace Flax.Build.Bindings
         {
             if (memberType.IsBitField)
                 return "_BIT";
+            if (memberType.IsPtr)
+            {
+                var t = FindApiTypeInfo(buildData, memberType, caller);
+                if (t.IsScriptingObject)
+                    return "_OBJ";
+            }
             return string.Empty;
         }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Linq;
@@ -95,7 +95,7 @@ namespace FlaxEditor.CustomEditors.Editors
             if (assetReference != null)
             {
                 if (assetReference.UseSmallPicker)
-                    height = 32;
+                    height = 36;
                 if (string.IsNullOrEmpty(assetReference.TypeName))
                 {
                 }

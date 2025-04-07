@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #if USE_EDITOR
 
@@ -79,10 +79,6 @@ bool Editor::CheckProjectUpgrade()
 
             Delete(file);
         }
-    }
-    else
-    {
-        LOG(Warning, "Missing version cache file");
     }
 
     // Check if project is in the old, deprecated layout
@@ -403,7 +399,7 @@ int32 Editor::LoadProduct()
     }
 
     // Create new project option
-    if (CommandLine::Options.NewProject)
+    if (CommandLine::Options.NewProject.IsTrue())
     {
         Array<String> projectFiles;
         FileSystem::DirectoryGetFiles(projectFiles, projectPath, TEXT("*.flaxproj"), DirectorySearchOption::TopDirectoryOnly);
@@ -428,7 +424,7 @@ int32 Editor::LoadProduct()
             }
         }
     }
-    if (CommandLine::Options.NewProject)
+    if (CommandLine::Options.NewProject.IsTrue())
     {
         if (projectPath.IsEmpty())
             projectPath = Platform::GetWorkingDirectory();
@@ -529,7 +525,7 @@ int32 Editor::LoadProduct()
     if (projectPath.IsEmpty())
     {
 #if PLATFORM_HAS_HEADLESS_MODE
-        if (CommandLine::Options.Headless)
+        if (CommandLine::Options.Headless.IsTrue())
         {
             Platform::Fatal(TEXT("Missing project path."));
             return -1;
@@ -612,7 +608,7 @@ int32 Editor::LoadProduct()
     // Validate project min supported version (older engine may try to load newer project)
     // Special check if project specifies only build number, then major/minor fields are set to 0
     const auto engineVersion = FLAXENGINE_VERSION;
-    for (auto e : projects)
+    for (const auto& e : projects)
     {
         const auto project = e.Item;
         if (project->MinEngineVersion > engineVersion ||
@@ -657,7 +653,7 @@ Window* Editor::CreateMainWindow()
 bool Editor::Init()
 {
     // Scripts project files generation from command line
-    if (CommandLine::Options.GenProjectFiles)
+    if (CommandLine::Options.GenProjectFiles.IsTrue())
     {
         const String customArgs = TEXT("-verbose -log -logfile=\"Cache/Intermediate/ProjectFileLog.txt\"");
         const bool failed = ScriptsBuilder::GenerateProject(customArgs);

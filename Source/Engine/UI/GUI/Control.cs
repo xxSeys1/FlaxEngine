@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -783,7 +783,7 @@ namespace FlaxEngine.GUI
             if (_tooltipUpdate != null)
             {
                 SetUpdate(ref _tooltipUpdate, null);
-                Tooltip.OnMouseLeaveControl(this);
+                Tooltip?.OnMouseLeaveControl(this);
             }
         }
 

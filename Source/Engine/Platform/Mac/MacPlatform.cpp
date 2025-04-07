@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #if PLATFORM_MAC
 
@@ -54,7 +54,7 @@ String ComputerName;
 
 DialogResult MessageBox::Show(Window* parent, const StringView& text, const StringView& caption, MessageBoxButtons buttons, MessageBoxIcon icon)
 {
-    if (CommandLine::Options.Headless)
+    if (CommandLine::Options.Headless.IsTrue())
         return DialogResult::None;
 	NSAlert* alert = [[NSAlert alloc] init];
     ASSERT(alert);

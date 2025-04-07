@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -161,7 +161,7 @@ public:
     /// Subtracts transformation from this transform.
     /// </summary>
     /// <param name="other">The other transformation.</param>
-    /// <returns>The different of two transformations.</returns>
+    /// <returns>The difference of two transformations.</returns>
     Transform Subtract(const Transform& other) const;
 
     /// <summary>

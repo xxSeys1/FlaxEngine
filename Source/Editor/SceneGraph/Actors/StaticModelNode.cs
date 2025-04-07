@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #if USE_LARGE_WORLDS
 using Real = System.Double;
@@ -23,7 +23,7 @@ namespace FlaxEditor.SceneGraph.Actors
     [HideInEditor]
     public sealed class StaticModelNode : ActorNode
     {
-        private Dictionary<IntPtr, Mesh.Vertex[]> _vertices;
+        private Dictionary<IntPtr, Float3[]> _vertices;
         private Vector3[] _selectionPoints;
         private Transform _selectionPointsTransform;
         private Model _selectionPointsModel;
@@ -66,14 +66,17 @@ namespace FlaxEditor.SceneGraph.Actors
                         var key = FlaxEngine.Object.GetUnmanagedPtr(mesh);
                         if (!_vertices.TryGetValue(key, out var verts))
                         {
-                            verts = mesh.DownloadVertexBuffer();
+                            var accessor = new MeshAccessor();
+                            if (accessor.LoadMesh(mesh))
+                                continue;
+                            verts = accessor.Positions;
                             if (verts == null)
                                 continue;
                             _vertices.Add(key, verts);
                         }
                         for (int i = 0; i < verts.Length; i++)
                         {
-                            var v = verts[i].Position;
+                            ref var v = ref verts[i];
                             var distance = Float3.DistanceSquared(ref pointLocal, ref v);
                             if (distance <= minDistance)
                             {

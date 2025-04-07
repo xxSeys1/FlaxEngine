@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -812,7 +812,7 @@ public:
     static FLAXENGINE_API T TriangleArea(const Vector3Base& v0, const Vector3Base& v1, const Vector3Base& v2);
 
     /// <summary>
-    /// Calculates the angle (in degrees) between from and to. This is always the smallest value.
+    /// Calculates the angle (in degrees) between from and to vectors. This is always the smallest value.
     /// </summary>
     /// <param name="from">The first vector.</param>
     /// <param name="to">The second vector.</param>

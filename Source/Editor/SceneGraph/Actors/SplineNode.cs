@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #if USE_LARGE_WORLDS
 using Real = System.Double;
@@ -322,7 +322,7 @@ namespace FlaxEditor.SceneGraph.Actors
                 var mouse = Input.Mouse;
                 var keyboard = Input.Keyboard;
 
-                if (keyboard.GetKey(KeyboardKeys.Shift))
+                if (keyboard.GetKey(KeyboardKeys.Shift) && !mouse.GetButton(MouseButton.Right))
                     EditSplineWithSnap(selectedPoint);
 
                 var canAddSplinePoint = mouse.PositionDelta == Float2.Zero && mouse.Position != Float2.Zero;

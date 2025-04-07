@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "Vector3.h"
 #include "Vector2.h"
@@ -657,7 +657,7 @@ double Double3::Angle(const Double3& from, const Double3& to)
 {
     const double dot = Math::Clamp(Dot(Normalize(from), Normalize(to)), -1.0, 1.0);
     if (Math::Abs(dot) > 1.0 - ZeroTolerance)
-        return dot > 0.0 ? 0.0 : 180.0;
+        return dot > 0.0f ? 0.0f : 180.0f;
     return Math::Acos(dot) * RadiansToDegrees;
 }
 

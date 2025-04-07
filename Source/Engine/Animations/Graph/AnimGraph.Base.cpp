@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "AnimGraph.h"
 #include "Engine/Core/Collections/Array.h"
@@ -87,8 +87,7 @@ void AnimationBucketInit(AnimGraphInstanceData::Bucket& bucket)
 
 void MultiBlendBucketInit(AnimGraphInstanceData::Bucket& bucket)
 {
-    bucket.MultiBlend.TimePosition = 0.0f;
-    bucket.MultiBlend.LastUpdateFrame = 0;
+    Platform::MemoryClear(&bucket.MultiBlend, sizeof(bucket.MultiBlend));
 }
 
 void BlendPoseBucketInit(AnimGraphInstanceData::Bucket& bucket)

@@ -1,10 +1,9 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "StreamingTexture.h"
 #include "Engine/Core/Log.h"
 #include "Engine/Threading/Threading.h"
 #include "Engine/Streaming/StreamingGroup.h"
-#include "Engine/Content/Loading/ContentLoadingManager.h"
 #include "Engine/Graphics/PixelFormatExtensions.h"
 #include "Engine/Graphics/GPUDevice.h"
 #include "Engine/Graphics/RenderTools.h"

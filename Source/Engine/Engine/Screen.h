@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -10,7 +10,7 @@
 /// <summary>
 /// Helper class to access display information.
 /// </summary>
-API_CLASS(Static) class FLAXENGINE_API Screen
+API_CLASS(Static, Attributes="DebugCommand") class FLAXENGINE_API Screen
 {
 DECLARE_SCRIPTING_TYPE_NO_SPAWN(Screen);
 

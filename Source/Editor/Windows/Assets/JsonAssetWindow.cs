@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using FlaxEditor.Content;
@@ -337,6 +337,10 @@ namespace FlaxEditor.Windows.Assets
         /// <inheritdoc />
         public override void OnDestroy()
         {
+            if (IsDisposing)
+                return;
+            base.OnDestroy();
+
             if (_isRegisteredForScriptsReload)
             {
                 _isRegisteredForScriptsReload = false;
@@ -344,8 +348,6 @@ namespace FlaxEditor.Windows.Assets
             }
             _optionsCM?.Dispose();
             _typeText = null;
-
-            base.OnDestroy();
         }
     }
 }

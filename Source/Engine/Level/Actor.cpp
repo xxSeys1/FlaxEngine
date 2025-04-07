@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "Actor.h"
 #include "ActorsCache.h"
@@ -13,6 +13,7 @@
 #include "Engine/Scripting/ManagedCLR/MClass.h"
 #include "Engine/Threading/Threading.h"
 #include "Engine/Content/Content.h"
+#include "Engine/Content/Deprecated.h"
 #include "Engine/Core/Cache.h"
 #include "Engine/Core/Collections/CollectionPoolCache.h"
 #include "Engine/Core/Math/Double4x4.h"
@@ -1136,12 +1137,18 @@ void Actor::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
     // StaticFlags update - added StaticFlags::Navigation
     // [Deprecated on 17.05.2020, expires on 17.05.2021]
     if (modifier->EngineBuild < 6178 && (int32)_staticFlags == (1 + 2 + 4))
+    {
+        MARK_CONTENT_DEPRECATED();
         _staticFlags |= StaticFlags::Navigation;
+    }
 
     // StaticFlags update - added StaticFlags::Shadow
     // [Deprecated on 17.05.2020, expires on 17.05.2021]
     if (modifier->EngineBuild < 6601 && (int32)_staticFlags == (1 + 2 + 4 + 8))
+    {
+        MARK_CONTENT_DEPRECATED();
         _staticFlags |= StaticFlags::Shadow;
+    }
 
     const auto tag = stream.FindMember("Tag");
     if (tag != stream.MemberEnd())
@@ -1709,7 +1716,7 @@ bool Actor::ToBytes(const Array<Actor*>& actors, MemoryWriteStream& output)
     output.WriteInt32(FLAXENGINE_VERSION_BUILD);
 
     // Serialized objects ids (for references mapping)
-    output.WriteArray(ids);
+    output.Write(ids);
 
     // Objects data
     rapidjson_flax::StringBuffer buffer;
@@ -1764,7 +1771,7 @@ bool Actor::FromBytes(const Span<byte>& data, Array<Actor*>& output, ISerializeM
 
     // Serialized objects ids (for references mapping)
     Array<Guid> ids;
-    stream.ReadArray(&ids);
+    stream.Read(ids);
     int32 objectsCount = ids.Count();
     if (objectsCount < 0)
         return true;
@@ -1936,7 +1943,7 @@ Array<Guid> Actor::TryGetSerializedObjectsIds(const Span<byte>& data)
         if (engineBuild <= FLAXENGINE_VERSION_BUILD && engineBuild >= 6165)
         {
             // Serialized objects ids (for references mapping)
-            stream.ReadArray(&result);
+            stream.Read(result);
         }
     }
 
@@ -2008,7 +2015,7 @@ Actor* Actor::Clone()
 
     // Deserialize objects
     Array<Actor*> output;
-    if (FromBytes(ToSpan(stream.GetHandle(), (int32)stream.GetPosition()), output, modifier.Value) || output.IsEmpty())
+    if (FromBytes(ToSpan(stream), output, modifier.Value) || output.IsEmpty())
         return nullptr;
     return output[0];
 }

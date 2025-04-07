@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -762,7 +762,7 @@ namespace FlaxEditor.Surface.ContextMenu
         }
 
         /// <inheritdoc />
-        public override void Show(Control parent, Float2 location)
+        public override void Show(Control parent, Float2 location, ContextMenuDirection? direction = null)
         {
             Show(parent, location, null);
         }

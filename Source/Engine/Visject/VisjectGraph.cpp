@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "VisjectGraph.h"
 #include "GraphUtilities.h"
@@ -642,9 +642,9 @@ void VisjectExecutor::ProcessGroupPacking(Box* box, Node* node, Value& value)
                     {
                         box = &node->Boxes[boxId];
                         String fieldName;
-                        stream.ReadString(&fieldName, 11);
+                        stream.Read(fieldName, 11);
                         VariantType fieldType;
-                        stream.ReadVariantType(&fieldType);
+                        stream.Read(fieldType);
                         if (box && box->HasConnection())
                         {
                             StringAsANSI<40> fieldNameAnsi(*fieldName, fieldName.Length());
@@ -683,9 +683,9 @@ void VisjectExecutor::ProcessGroupPacking(Box* box, Node* node, Value& value)
             {
                 box = &node->Boxes[boxId];
                 String fieldName;
-                stream.ReadString(&fieldName, 11);
+                stream.Read(fieldName, 11);
                 VariantType fieldType;
-                stream.ReadVariantType(&fieldType);
+                stream.Read(fieldType);
                 if (box && box->HasConnection())
                 {
                     const Variant fieldValue = eatBox(node, box->FirstConnection());
@@ -737,9 +737,9 @@ void VisjectExecutor::ProcessGroupPacking(Box* box, Node* node, Value& value)
                     for (int32 boxId = 1; boxId < node->Boxes.Count(); boxId++)
                     {
                         String fieldName;
-                        stream.ReadString(&fieldName, 11);
+                        stream.Read(fieldName, 11);
                         VariantType fieldType;
-                        stream.ReadVariantType(&fieldType);
+                        stream.Read(fieldType);
                         if (box->ID == boxId)
                         {
                             StringAsANSI<40> fieldNameAnsi(*fieldName, fieldName.Length());
@@ -785,9 +785,9 @@ void VisjectExecutor::ProcessGroupPacking(Box* box, Node* node, Value& value)
             for (int32 boxId = 1; boxId < node->Boxes.Count(); boxId++)
             {
                 String fieldName;
-                stream.ReadString(&fieldName, 11);
+                stream.Read(fieldName, 11);
                 VariantType fieldType;
-                stream.ReadVariantType(&fieldType);
+                stream.Read(fieldType);
                 if (box->ID == boxId)
                 {
                     type.Struct.GetField(structureValue.AsBlob.Data, fieldName, value);

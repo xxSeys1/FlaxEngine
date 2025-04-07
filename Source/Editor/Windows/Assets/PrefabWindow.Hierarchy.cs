@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -252,6 +252,10 @@ namespace FlaxEditor.Windows.Assets
 
             public override void OnDestroy()
             {
+                if (IsDisposing)
+                    return;
+                base.OnDestroy();
+
                 _window = null;
                 _dragAssets = null;
                 _dragActorType = null;
@@ -259,8 +263,6 @@ namespace FlaxEditor.Windows.Assets
                 _dragScriptItems = null;
                 _dragHandlers?.Clear();
                 _dragHandlers = null;
-
-                base.OnDestroy();
             }
         }
 

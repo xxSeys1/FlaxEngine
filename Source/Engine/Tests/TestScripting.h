@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -204,4 +204,25 @@ public:
     {
         return str.Length();
     }
+};
+
+// Test debug commands via static class.
+API_CLASS(Static, Attributes="DebugCommand") class FLAXENGINE_API TestDebugCommand1
+{
+    DECLARE_SCRIPTING_TYPE_NO_SPAWN(TestDebugCommand1);
+
+    // Static variable to test.
+    API_FIELD() static bool Var;
+};
+
+// Test debug commands inside a class.
+API_CLASS() class FLAXENGINE_API TestDebugCommand2 : public ScriptingObject
+{
+    DECLARE_SCRIPTING_TYPE(TestDebugCommand2);
+
+    // Static variable to test.
+    API_FIELD(Attributes="DebugCommand") static float Var;
+
+    // Static method to test.
+    API_FUNCTION(Attributes="DebugCommand") static void Exec();
 };

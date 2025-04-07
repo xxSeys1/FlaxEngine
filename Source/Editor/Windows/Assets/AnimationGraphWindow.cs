@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -371,6 +371,9 @@ namespace FlaxEditor.Windows.Assets
             // Update navbar
             _surface.UpdateNavigationBar(_navigationBar, _toolstrip);
 
+            // Show whole model
+            _preview.ResetCamera();
+
             return false;
         }
 
@@ -437,6 +440,16 @@ namespace FlaxEditor.Windows.Assets
                 _debugFlows.Clear();
             }
 
+            // Update preview values when debugging specific instance
+            if (debugActor != null && debugActor != _preview.PreviewActor)
+            {
+                var parameters = debugActor.Parameters;
+                foreach (var p in parameters)
+                {
+                    _preview.PreviewActor.SetParameterValue(p.Identifier, p.Value);
+                }
+            }
+
             _showNodesButton.Checked = _preview.ShowNodes;
         }
 
@@ -445,6 +458,7 @@ namespace FlaxEditor.Windows.Assets
         {
             if (IsDisposing)
                 return;
+            base.OnDestroy();
             Animations.DebugFlow -= OnDebugFlow;
 
             _properties = null;
@@ -452,8 +466,6 @@ namespace FlaxEditor.Windows.Assets
             _debugPicker = null;
             _showNodesButton = null;
             _previewTab = null;
-
-            base.OnDestroy();
         }
 
         /// <inheritdoc />
