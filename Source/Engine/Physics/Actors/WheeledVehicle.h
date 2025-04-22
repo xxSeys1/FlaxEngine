@@ -54,12 +54,12 @@ API_CLASS(Attributes="ActorContextMenu(\"New/Physics/Wheeled Vehicle\"), ActorTo
         /// <summary>
         /// The vehicle speed.
         /// </summary>
-        API_FIELD(Attributes = "Limit(0)") float Speed = 1000;
+        API_FIELD(Attributes="Limit(0)") float Speed = 1000;
 
         /// <summary>
         /// The target max steer of the speed.
         /// </summary>
-        API_FIELD(Attributes = "Limit(0, 1)") float Steer = 1;
+        API_FIELD(Attributes="Limit(0, 1)") float Steer = 1;
 
         SteerControl() = default;
 
@@ -243,7 +243,7 @@ API_CLASS(Attributes="ActorContextMenu(\"New/Physics/Wheeled Vehicle\"), ActorTo
         /// <summary>
         /// Number of gears to move to forward
         /// </summary>
-        API_FIELD(Attributes = "Limit(1, 30)") int32 ForwardGearsRatios = 5;
+        API_FIELD(Attributes="Limit(1, 30)") int32 ForwardGearsRatios = 5;
 
         /// <summary>
         /// Time it takes to switch gear. Specified in seconds (s).
