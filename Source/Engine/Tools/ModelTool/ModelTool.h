@@ -276,8 +276,11 @@ public:
     public: // Materials
 
         // If checked, the importer will create materials for model meshes as specified in the file.
-        API_FIELD(Attributes="EditorOrder(400), EditorDisplay(\"Materials\"), VisibleIf(nameof(ShowGeometry))")
+        API_FIELD(Attributes="EditorOrder(399), EditorDisplay(\"Materials\"), VisibleIf(nameof(ShowGeometry))")
         bool ImportMaterials = true;
+        // If checked, the importer will create empty material slots for every material.
+        API_FIELD(Attributes = "EditorOrder(400), EditorDisplay(\"Materials\"), VisibleIf(nameof(ShowGeometry))")
+        bool CreateEmptyMaterialSlots;
         // If checked, the importer will create the model's materials as instances of a base material.
         API_FIELD(Attributes="EditorOrder(401), EditorDisplay(\"Materials\"), VisibleIf(nameof(ImportMaterials)), VisibleIf(nameof(ShowGeometry))")
         bool ImportMaterialsAsInstances = false;
@@ -285,7 +288,7 @@ public:
         API_FIELD(Attributes="EditorOrder(402), EditorDisplay(\"Materials\"), VisibleIf(nameof(ImportMaterialsAsInstances)), VisibleIf(nameof(ShowGeometry))")
         AssetReference<MaterialBase> InstanceToImportAs;
         // If checked, the importer will import texture files used by the model and any embedded texture resources.
-        API_FIELD(Attributes="EditorOrder(410), EditorDisplay(\"Materials\"), VisibleIf(nameof(ShowGeometry))")
+        API_FIELD(Attributes="EditorOrder(410), EditorDisplay(\"Materials\"), VisibleIf(nameof(ShowGeometry)), VisibleIf(nameof(CreateEmptyMaterialSlots), true)")
         bool ImportTextures = true;
         // If checked, the importer will try to keep the model's current overridden material slots, instead of importing materials from the source file.
         API_FIELD(Attributes="EditorOrder(420), EditorDisplay(\"Materials\", \"Keep Overridden Materials\"), VisibleIf(nameof(ShowGeometry))")
