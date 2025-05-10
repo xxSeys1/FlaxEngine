@@ -120,6 +120,7 @@ private:
     MaterialValue _ddx, _ddy, _cameraVector;
 
 public:
+
     MaterialGenerator();
     ~MaterialGenerator();
 
@@ -209,8 +210,7 @@ private:
 public:
 
     static MaterialValue getUVs;
-    static MaterialValue getUnscaledTime;
-    static MaterialValue getScaledTime;
+    static MaterialValue getTime;
     static MaterialValue getNormal;
     static MaterialValue getNormalZero;
     static MaterialValue getVertexColor;

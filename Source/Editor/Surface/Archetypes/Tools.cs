@@ -1386,11 +1386,10 @@ namespace FlaxEditor.Surface.Archetypes
                 Title = "Time",
                 Description = "Game time constant",
                 Flags = NodeFlags.MaterialGraph,
-                Size = new Float2(110, 40),
+                Size = new Float2(110, 20),
                 Elements = new[]
                 {
-                    NodeElementArchetype.Factory.Output(0, "Scaled Time", typeof(float), 0),
-                    NodeElementArchetype.Factory.Output(1, "Unscaled Time", typeof(float), 1),
+                    NodeElementArchetype.Factory.Output(0, "", typeof(float), 0),
                 }
             },
             new NodeArchetype
