@@ -64,16 +64,6 @@ namespace FlaxEditor
         /// </summary>
         public static string InconsolataRegularFont = "Editor/Fonts/Inconsolata-Regular";
 
-        /// <summary>
-        /// The checkboard material used as a background for displaying transparent colors.
-        /// </summary>
-        public static string AlphaGridMaterial = "Editor/ColorPicker/AlphaBackgroundGrid";
-
-        /// <summary>
-        /// The material used for the HS color wheel.
-        /// </summary>
-        public static string HSWheelMaterial = "Editor/ColorPicker/HSWheel";
-
 
         /// <summary>
         /// The window icon.
@@ -89,6 +79,17 @@ namespace FlaxEditor
         /// The default font material.
         /// </summary>
         public static string DefaultFontMaterial = "Editor/DefaultFontMaterial";
+
+
+        /// <summary>
+        /// The checkboard material used as a background for displaying transparent colors.
+        /// </summary>
+        public static string AlphaGridMaterial = "Editor/ColorPicker/AlphaBackgroundGrid";
+
+        /// <summary>
+        /// The material used for the HS color wheel.
+        /// </summary>
+        public static string HSWheelMaterial = "Editor/ColorPicker/HSWheel";
 
 
         /// <summary>
@@ -147,10 +148,6 @@ namespace FlaxEditor
         /// </summary>
         public static string FlaxIconBlueTexture = "Engine/Textures/FlaxIconBlue";
 
-        /// <summary>
-        /// The checkboard material used as a background for displaying transparent colors.
-        /// </summary>
-        public static string ColorAlphaBackgroundGrid = "Editor/AlphaBackgroundGrid";
 
         /// <summary>
         /// The icon lists used by editor from the SegMDL2 font.
