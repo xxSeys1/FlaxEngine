@@ -106,7 +106,7 @@ namespace FlaxEditor.GUI.Input
         public ColorValueBox()
         : base(0, 0, 32, 18)
         {
-            checkerMaterial = FlaxEngine.Content.LoadAsyncInternal<MaterialBase>(EditorAssets.ColorAlphaBackgroundGrid);
+            checkerMaterial = FlaxEngine.Content.LoadAsyncInternal<MaterialBase>(EditorAssets.AlphaGridMaterial);
             checkerMaterial = checkerMaterial.CreateVirtualInstance();
             checkerMaterial.SetParameterValue(ScaleParamName, GridScale);
         }
