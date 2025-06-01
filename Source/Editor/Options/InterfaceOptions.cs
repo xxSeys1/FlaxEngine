@@ -191,13 +191,6 @@ namespace FlaxEditor.Options
         public bool CenterMouseOnGameWinFocus { get; set; } = false;
         
         /// <summary>
-        /// Gets or sets a value indicating whether the toolbar for the Game Window options is shown.
-        /// </summary>
-        [DefaultValue(true)]
-        [EditorDisplay("Interface", "Show Game Window Options Toolbar"), EditorOrder(100), Tooltip("Determines whether the toolbar for the Game Window options is shown.")]
-        public bool ShowGameWindowOptionsToolbar { get; set; } = true;
-
-        /// <summary>
         /// Gets or sets the method window opening.
         /// </summary>
         [DefaultValue(DockStateProxy.Float)]
