@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "BoundingSphere.h"
 #include "BoundingBox.h"
@@ -51,7 +51,11 @@ bool BoundingSphere::Intersects(const BoundingBox& box) const
 
 bool BoundingSphere::Intersects(const BoundingSphere& sphere) const
 {
-    return CollisionsHelper::SphereIntersectsSphere(*this, sphere);
+    const Real radiisum = Radius + sphere.Radius;
+    const Real x = Center.X - sphere.Center.X;
+    const Real y = Center.Y - sphere.Center.Y;
+    const Real z = Center.Z - sphere.Center.Z;
+    return x * x + y * y + z * z <= radiisum * radiisum;
 }
 
 ContainmentType BoundingSphere::Contains(const Vector3& point) const

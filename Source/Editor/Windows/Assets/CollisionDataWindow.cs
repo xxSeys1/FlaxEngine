@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Xml;
@@ -102,6 +102,8 @@ namespace FlaxEditor.Windows.Assets
 
             private class CookData : CreateFileEntry
             {
+                public override bool CanBeCreated => true;
+
                 public PropertiesProxy Proxy;
                 public CollisionDataType Type;
                 public ModelBase Model;
@@ -200,7 +202,7 @@ namespace FlaxEditor.Windows.Assets
                 ViewportCamera = new FPSCamera(),
                 Parent = _split.Panel1
             };
-            _preview.Task.ViewFlags &= ~ViewFlags.Sky & ~ViewFlags.Bloom;
+            _preview.Task.ViewFlags &= ~ViewFlags.Sky & ~ViewFlags.Bloom & ~ViewFlags.EyeAdaptation;
 
             // Asset properties
             _propertiesPresenter = new CustomEditorPresenter(null);
@@ -307,6 +309,8 @@ namespace FlaxEditor.Windows.Assets
         /// <inheritdoc />
         public override void OnDestroy()
         {
+            if (IsDisposing)
+                return;
             base.OnDestroy();
 
             Object.Destroy(ref _collisionWiresShowActor);

@@ -1,5 +1,6 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
+using System.IO;
 using System.Xml;
 using FlaxEditor.Content;
 using FlaxEditor.Content.Import;
@@ -27,7 +28,7 @@ namespace FlaxEditor.Windows.Assets
         public class PropertiesProxyBase
         {
             internal TextureWindow _window;
-            
+
             /// <summary>
             /// Gathers parameters from the specified texture.
             /// </summary>
@@ -37,7 +38,7 @@ namespace FlaxEditor.Windows.Assets
                 // Link
                 _window = window;
             }
-            
+
             /// <summary>
             /// Clears temporary data.
             /// </summary>
@@ -57,11 +58,8 @@ namespace FlaxEditor.Windows.Assets
                 {
                     var window = ((TexturePropertiesProxy)Values[0])._window;
                     var texture = window?.Asset;
-                    if (texture == null || !texture.IsLoaded)
-                    {
-                        layout.Label("Loading...", TextAlignment.Center);
+                    if (Utilities.Utils.OnAssetProperties(layout, texture))
                         return;
-                    }
 
                     // Texture info
                     var general = layout.Group("General");
@@ -83,7 +81,7 @@ namespace FlaxEditor.Windows.Assets
                 }
             }
         }
-        
+
         /// <summary>
         /// The texture import properties proxy object.
         /// </summary>
@@ -129,16 +127,27 @@ namespace FlaxEditor.Windows.Assets
             public void DiscardChanges()
             {
             }
-            
+
             private sealed class ProxyEditor : GenericEditor
             {
                 public override void Initialize(LayoutElementsContainer layout)
                 {
+                    var proxy = (ImportPropertiesProxy)Values[0];
+                    if (proxy._window == null)
+                    {
+                        layout.Label("Loading...", TextAlignment.Center);
+                        return;
+                    }
+
                     // Import settings
                     base.Initialize(layout);
 
+                    // Creates the import path UI
+                    var group = layout.Group("Import Path");
+                    Utilities.Utils.CreateImportPathUI(group, proxy._window.Item as BinaryAssetItem);
+
                     // Reimport
-                    layout.Space(10);
+                    layout.Space(5);
                     var reimportButton = layout.Button("Reimport");
                     reimportButton.Button.Clicked += () => ((ImportPropertiesProxy)Values[0]).Reimport();
                 }
@@ -151,7 +160,7 @@ namespace FlaxEditor.Windows.Assets
             /// The presenter to use in the tab.
             /// </summary>
             public CustomEditorPresenter Presenter;
-            
+
             /// <summary>
             /// The proxy to use in the tab.
             /// </summary>
@@ -176,11 +185,13 @@ namespace FlaxEditor.Windows.Assets
             /// <inheritdoc />
             public override void OnDestroy()
             {
+                if (IsDisposing)
+                    return;
+                base.OnDestroy();
+
                 Presenter.Deselect();
                 Presenter = null;
                 Proxy = null;
-
-                base.OnDestroy();
             }
         }
 
@@ -214,6 +225,8 @@ namespace FlaxEditor.Windows.Assets
         public TextureWindow(Editor editor, AssetItem item)
         : base(editor, item)
         {
+            var inputOptions = Editor.Options.Options.Input;
+
             // Split Panel
             _split = new SplitPanel(Orientation.Horizontal, ScrollBars.None, ScrollBars.Vertical)
             {
@@ -228,7 +241,7 @@ namespace FlaxEditor.Windows.Assets
             {
                 Parent = _split.Panel1
             };
-            
+
             // Properties tabs
             _tabs = new()
             {
@@ -244,7 +257,7 @@ namespace FlaxEditor.Windows.Assets
             _tabs.AddTab(new ImportTab(this));
 
             // Toolstrip
-            _saveButton = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Save64, Save).LinkTooltip("Save");
+            _saveButton = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Save64, Save).LinkTooltip("Save", ref inputOptions.Save);
             _toolstrip.AddButton(Editor.Icons.Import64, () => Editor.ContentImporting.Reimport((BinaryAssetItem)Item)).LinkTooltip("Reimport");
             _toolstrip.AddSeparator();
             _toolstrip.AddButton(Editor.Icons.CenterView64, _preview.CenterView).LinkTooltip("Center view");

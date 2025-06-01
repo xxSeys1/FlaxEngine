@@ -1,15 +1,19 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using FlaxEditor.CustomEditors.GUI;
 using FlaxEditor.GUI.Input;
 using FlaxEditor.Content;
+using FlaxEditor.CustomEditors.Elements;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.GUI.Drag;
 using FlaxEditor.SceneGraph;
 using FlaxEditor.Scripting;
+using FlaxEditor.Windows;
+using FlaxEditor.Windows.Assets;
 using FlaxEngine;
 using FlaxEngine.GUI;
 using FlaxEngine.Utilities;
@@ -53,7 +57,7 @@ namespace FlaxEditor.CustomEditors.Editors
                 Index = index;
 
                 SetupContextMenu += OnSetupContextMenu;
-                _arrangeButtonRect = new Rectangle(2, 3, 12, 12);
+                _arrangeButtonRect = new Rectangle(2, 4, 12, 12);
 
                 // Extend margin of the label to support a dragging handle.
                 Margin m = Margin;
@@ -75,9 +79,9 @@ namespace FlaxEditor.CustomEditors.Editors
 
                 b = menu.AddButton("Move down", OnMoveDownClicked);
                 b.Enabled = Index + 1 < Editor.Count && !Editor._readOnly;
-                
+
                 b = menu.AddButton("Remove", OnRemoveClicked);
-                b.Enabled = !Editor._readOnly;
+                b.Enabled = !Editor._readOnly && Editor._canResize;
             }
 
             /// <inheritdoc />
@@ -88,13 +92,12 @@ namespace FlaxEditor.CustomEditors.Editors
                 _arrangeButtonInUse = false;
             }
 
-
             /// <inheritdoc />
             public override void Draw()
             {
                 base.Draw();
-                var style = FlaxEngine.GUI.Style.Current;
 
+                var style = FlaxEngine.GUI.Style.Current;
                 var mousePosition = PointFromScreen(Input.MouseScreenPosition);
                 var dragBarColor = _arrangeButtonRect.Contains(mousePosition) ? style.Foreground : style.ForegroundGrey;
                 Render2D.DrawSprite(FlaxEditor.Editor.Instance.Icons.DragBar12, _arrangeButtonRect, _arrangeButtonInUse ? Color.Orange : dragBarColor);
@@ -102,6 +105,14 @@ namespace FlaxEditor.CustomEditors.Editors
                 {
                     Render2D.FillRectangle(arrangeTargetRect, style.Selection);
                 }
+            }
+
+            /// <inheritdoc />
+            protected override void OnSizeChanged()
+            {
+                base.OnSizeChanged();
+
+                _arrangeButtonRect.Y = (Height - _arrangeButtonRect.Height) * 0.5f;
             }
 
             private bool ArrangeAreaCheck(out int index, out Rectangle rect)
@@ -221,6 +232,7 @@ namespace FlaxEditor.CustomEditors.Editors
 
             public void Setup(CollectionEditor editor, int index, bool canReorder = true)
             {
+                Pivot = Float2.Zero;
                 HeaderHeight = 18;
                 _canReorder = canReorder;
                 EnableDropDownIcon = true;
@@ -228,7 +240,38 @@ namespace FlaxEditor.CustomEditors.Editors
                 ArrowImageClosed = new SpriteBrush(icons.ArrowRight12);
                 ArrowImageOpened = new SpriteBrush(icons.ArrowDown12);
                 HeaderText = $"Element {index}";
-                IsClosed = false;
+                
+                string saveName = string.Empty;
+                if (editor.Presenter?.Owner is PropertiesWindow propertiesWindow)
+                {
+                    var selection = FlaxEditor.Editor.Instance.SceneEditing.Selection[0];
+                    if (selection != null)
+                    {
+                        saveName += $"{selection.ID},";
+                    }
+                }
+                else if (editor.Presenter?.Owner is PrefabWindow prefabWindow)
+                {
+                    var selection = prefabWindow.Selection[0];
+                    if (selection != null)
+                    {
+                        saveName += $"{selection.ID},";
+                    }
+                }
+                if (editor.ParentEditor?.Layout.ContainerControl is DropPanel pdp)
+                {
+                    saveName += $"{pdp.HeaderText},";
+                }
+                if (editor.Layout.ContainerControl is DropPanel mainGroup)
+                {
+                    saveName += $"{mainGroup.HeaderText}";
+                    IsClosed = FlaxEditor.Editor.Instance.ProjectCache.IsGroupToggled($"{saveName}:{index}");
+                }
+                else
+                {
+                    IsClosed = false;
+                }
+                
                 Editor = editor;
                 Index = index;
                 Offsets = new Margin(7, 7, 0, 0);
@@ -238,6 +281,37 @@ namespace FlaxEditor.CustomEditors.Editors
                 {
                     HeaderTextMargin = new Margin(18, 0, 0, 0);
                     _arrangeButtonRect = new Rectangle(16, 3, 12, 12);
+                }
+                IsClosedChanged += OnIsClosedChanged;
+            }
+
+            private void OnIsClosedChanged(DropPanel panel)
+            {
+                string saveName = string.Empty;
+                if (Editor.Presenter?.Owner is PropertiesWindow pw)
+                {
+                    var selection = FlaxEditor.Editor.Instance.SceneEditing.Selection[0];
+                    if (selection != null)
+                    {
+                        saveName += $"{selection.ID},";
+                    }
+                }
+                else if (Editor.Presenter?.Owner is PrefabWindow prefabWindow)
+                {
+                    var selection = prefabWindow.Selection[0];
+                    if (selection != null)
+                    {
+                        saveName += $"{selection.ID},";
+                    }
+                }
+                if (Editor.ParentEditor?.Layout.ContainerControl is DropPanel pdp)
+                {
+                    saveName += $"{pdp.HeaderText},";
+                }
+                if (Editor.Layout.ContainerControl is DropPanel mainGroup)
+                {
+                    saveName += $"{mainGroup.HeaderText}";
+                    FlaxEditor.Editor.Instance.ProjectCache.SetGroupToggle($"{saveName}:{Index}", panel.IsClosed);
                 }
             }
 
@@ -278,10 +352,10 @@ namespace FlaxEditor.CustomEditors.Editors
             public override void Draw()
             {
                 base.Draw();
+
                 if (_canReorder)
                 {
                     var style = FlaxEngine.GUI.Style.Current;
-
                     var mousePosition = PointFromScreen(Input.MouseScreenPosition);
                     var dragBarColor = _arrangeButtonRect.Contains(mousePosition) ? style.Foreground : style.ForegroundGrey;
                     Render2D.DrawSprite(FlaxEditor.Editor.Instance.Icons.DragBar12, _arrangeButtonRect, _arrangeButtonInUse ? Color.Orange : dragBarColor);
@@ -377,6 +451,7 @@ namespace FlaxEditor.CustomEditors.Editors
         private bool _canResize;
         private bool _canReorderItems;
         private CollectionAttribute.DisplayType _displayType;
+        private List<CollectionDropPanel> _cachedDropPanels = new List<CollectionDropPanel>();
 
         /// <summary>
         /// Gets the length of the collection.
@@ -482,7 +557,7 @@ namespace FlaxEditor.CustomEditors.Editors
                     MinValue = _minCount,
                     MaxValue = _maxCount,
                     AnchorPreset = AnchorPresets.TopRight,
-                    Bounds = new Rectangle(-40 - dropPanel.ItemsMargin.Right, y, 40, height),
+                    Bounds = new Rectangle(-55 - dropPanel.ItemsMargin.Right, y, 55, height),
                     Parent = dropPanel,
                 };
 
@@ -491,7 +566,7 @@ namespace FlaxEditor.CustomEditors.Editors
                     Text = "Size",
                     AnchorPreset = AnchorPresets.TopRight,
                     Bounds = new Rectangle(-_sizeBox.Width - 40 - dropPanel.ItemsMargin.Right - 2, y, 40, height),
-                    Parent = dropPanel
+                    Parent = dropPanel,
                 };
 
                 if (!_canResize || (NotNullItems && size == 0))
@@ -519,6 +594,10 @@ namespace FlaxEditor.CustomEditors.Editors
                               (elementType.GetProperties().Length == 1 && elementType.GetFields().Length == 0) ||
                               elementType.Equals(new ScriptType(typeof(JsonAsset))) ||
                               elementType.Equals(new ScriptType(typeof(SettingsBase)));
+                if (_cachedDropPanels == null)
+                    _cachedDropPanels = new List<CollectionDropPanel>();
+                else
+                    _cachedDropPanels.Clear();
                 for (int i = 0; i < size; i++)
                 {
                     // Apply spacing
@@ -542,12 +621,19 @@ namespace FlaxEditor.CustomEditors.Editors
                     else if (_displayType == CollectionAttribute.DisplayType.Header || (_displayType == CollectionAttribute.DisplayType.Default && !single))
                     {
                         var cdp = panel.CustomContainer<CollectionDropPanel>();
+                        _cachedDropPanels.Add(cdp.CustomControl);
                         cdp.CustomControl.Setup(this, i, _canReorderItems);
                         var itemLayout = cdp.VerticalPanel();
                         cdp.CustomControl.LinkedEditor = itemLayout.Object(new ListValueContainer(elementType, i, Values, attributes), overrideEditor);
                         if (_readOnly && itemLayout.Children.Count > 0)
                             GenericEditor.OnReadOnlyProperty(itemLayout);
                     }
+                }
+
+                if (_displayType == CollectionAttribute.DisplayType.Header || (_displayType == CollectionAttribute.DisplayType.Default && !single))
+                {
+                    if (Layout is GroupElement g)
+                        g.SetupContextMenu += OnSetupContextMenu;
                 }
             }
             _elementsCount = size;
@@ -556,10 +642,10 @@ namespace FlaxEditor.CustomEditors.Editors
             if (_canResize && !_readOnly)
             {
                 var panel = dragArea.HorizontalPanel();
-                panel.Panel.Size = new Float2(0, 20);
-                panel.Panel.Margin = new Margin(2);
+                panel.Panel.Size = new Float2(0, 18);
+                panel.Panel.Margin = new Margin(0, 0, Utilities.Constants.UIMargin, 0);
 
-                var removeButton = panel.Button("-", "Remove last item");
+                var removeButton = panel.Button("-", "Remove the last item");
                 removeButton.Button.Size = new Float2(16, 16);
                 removeButton.Button.Enabled = size > _minCount;
                 removeButton.Button.AnchorPreset = AnchorPresets.TopRight;
@@ -570,7 +656,7 @@ namespace FlaxEditor.CustomEditors.Editors
                     Resize(Count - 1);
                 };
 
-                var addButton = panel.Button("+", "Add new item");
+                var addButton = panel.Button("+", "Add a new item");
                 addButton.Button.Size = new Float2(16, 16);
                 addButton.Button.Enabled = (!NotNullItems || size > 0) && size < _maxCount;
                 addButton.Button.AnchorPreset = AnchorPresets.TopRight;
@@ -581,6 +667,28 @@ namespace FlaxEditor.CustomEditors.Editors
                     Resize(Count + 1);
                 };
             }
+        }
+
+        private void OnSetupContextMenu(ContextMenu menu, DropPanel panel)
+        {
+            if (menu.Items.Any(x => x is ContextMenuButton b && b.Text.Equals("Open All", StringComparison.Ordinal)))
+                return;
+
+            menu.AddSeparator();
+            menu.AddButton("Open All", () =>
+            {
+                foreach (var cachedPanel in _cachedDropPanels)
+                {
+                    cachedPanel.IsClosed = false;
+                }
+            });
+            menu.AddButton("Close All", () =>
+            {
+                foreach (var cachedPanel in _cachedDropPanels)
+                {
+                    cachedPanel.IsClosed = true;
+                }
+            });
         }
 
         /// <inheritdoc />
@@ -663,7 +771,7 @@ namespace FlaxEditor.CustomEditors.Editors
                     cloned[i] = tmp;
                 }
             }
-            
+
             SetValue(cloned);
         }
 
@@ -777,6 +885,11 @@ namespace FlaxEditor.CustomEditors.Editors
                 set => _pickerValidator.FileExtension = value;
             }
 
+            public DragAreaControl()
+            {
+                Pivot = Float2.Zero;
+            }
+
             /// <inheritdoc />
             public override void Draw()
             {
@@ -791,9 +904,13 @@ namespace FlaxEditor.CustomEditors.Editors
                 base.Draw();
             }
 
+            /// <inheritdoc />
             public override void OnDestroy()
             {
                 _pickerValidator.OnDestroy();
+                _pickerValidator = null;
+
+                base.OnDestroy();
             }
 
             private bool ValidateActors(ActorNode node)

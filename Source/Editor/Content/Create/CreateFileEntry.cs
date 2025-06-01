@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 namespace FlaxEditor.Content.Create
 {
@@ -12,6 +12,11 @@ namespace FlaxEditor.Content.Create
 
         /// <inheritdoc />
         public string ResultUrl { get; }
+
+        /// <summary>
+        /// Gets a value indicating wether a file can be created based on the current settings.
+        /// </summary>
+        public abstract bool CanBeCreated { get; }
 
         /// <summary>
         /// Gets a value indicating whether this entry has settings to modify.

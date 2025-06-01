@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -40,14 +40,17 @@ private:
     Array<Color32> _cachedSplatMap[TERRAIN_MAX_SPLATMAPS_COUNT];
     bool _wasHeightModified;
     bool _wasSplatmapModified[TERRAIN_MAX_SPLATMAPS_COUNT];
+#if TERRAIN_USE_PHYSICS_DEBUG
+    bool _debugLinesDirty = true;
+    class GPUBuffer* _debugLines = nullptr;
+#endif
     TextureBase::InitData* _dataHeightmap = nullptr;
     TextureBase::InitData* _dataSplatmap[TERRAIN_MAX_SPLATMAPS_COUNT] = {};
 #endif
-#if TERRAIN_USE_PHYSICS_DEBUG
-    Array<Vector3> _debugLines; // TODO: large-worlds
-#endif
 #if USE_EDITOR
     Array<Vector3> _collisionTriangles; // TODO: large-worlds
+    class GPUBuffer* _collisionTrianglesBuffer = nullptr;
+    bool _collisionTrianglesBufferDirty = true;
 #endif
     Array<Float3> _collisionVertices; // TODO: large-worlds
 
@@ -148,6 +151,12 @@ public:
     {
         return GetChunk(z * Terrain::ChunksCountEdge + x);
     }
+
+    /// <summary>
+    /// Gets the heightfield collision data asset.
+    /// </summary>
+    /// <returns>The heightfield data asset.</returns>
+    API_PROPERTY() RawDataAsset* GetHeightfield() const;
 
     /// <summary>
     /// Gets the splatmap assigned to this patch.

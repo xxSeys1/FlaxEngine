@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #pragma once
 
@@ -31,7 +31,7 @@ public:
     /// <param name="renderContext">The rendering context.</param>
     /// <param name="input">Target with renderer frame ready for further processing.</param>
     /// <param name="output">The output frame.</param>
-    void Render(RenderContext& renderContext, GPUTexture* input, GPUTexture* output);
+    void Render(RenderContext& renderContext, GPUTexture*& input, GPUTexture*& output);
 
 private:
 

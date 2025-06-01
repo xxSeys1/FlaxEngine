@@ -1,8 +1,9 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "ParticleEffect.h"
 #include "Particles.h"
 #include "Engine/Core/Types/CommonValue.h"
+#include "Engine/Content/Deprecated.h"
 #include "Engine/Serialization/JsonTools.h"
 #include "Engine/Serialization/Serialization.h"
 #include "Engine/Level/Scene/SceneRendering.h"
@@ -279,6 +280,34 @@ void ParticleEffect::UpdateSimulation(bool singleFrame)
     if (singleFrame)
         Instance.LastUpdateTime = (UseTimeScale ? Time::Update.Time : Time::Update.UnscaledTime).GetTotalSeconds();
     Particles::UpdateEffect(this);
+}
+
+void ParticleEffect::SpawnParticles(int32 count, const StringView& emitterTrackName)
+{
+    auto system = ParticleSystem.Get();
+    if (!system)
+        return;
+    if (emitterTrackName.IsEmpty())
+    {
+        for (auto& e : Instance.Emitters)
+            e.CustomSpawnCount += count;
+    }
+    else
+    {
+        for (int32 i = 0; i < system->Tracks.Count(); i++)
+        {
+            auto& track = system->Tracks[i];
+            if (track.Type == ParticleSystem::Track::Types::Emitter && track.Name == emitterTrackName)
+            {
+                const int32 emitterIndex = track.AsEmitter.Index;
+                if (Instance.Emitters.IsValidIndex(emitterIndex))
+                {
+                    Instance.Emitters.Get()[emitterIndex].CustomSpawnCount += count;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void ParticleEffect::Play()
@@ -561,7 +590,7 @@ void ParticleEffect::OnDebugDrawSelected()
 void ParticleEffect::OnLayerChanged()
 {
     if (_sceneRenderingKey != -1)
-        GetSceneRendering()->UpdateActor(this, _sceneRenderingKey);
+        GetSceneRendering()->UpdateActor(this, _sceneRenderingKey, ISceneRenderingListener::Layer);
 }
 
 void ParticleEffect::Serialize(SerializeStream& stream, const void* otherObj)
@@ -635,6 +664,8 @@ void ParticleEffect::Deserialize(DeserializeStream& stream, ISerializeModifier* 
         // [Deprecated on 25.11.2018, expires on 25.11.2022]
         if (modifier->EngineBuild < 6197)
         {
+            PRAGMA_DISABLE_DEPRECATION_WARNINGS
+            MARK_CONTENT_DEPRECATED();
             const auto& overrides = overridesMember->value;
             ASSERT(overrides.IsArray());
             _parametersOverrides.EnsureCapacity(_parametersOverrides.Count() + overrides.Size());
@@ -672,6 +703,7 @@ void ParticleEffect::Deserialize(DeserializeStream& stream, ISerializeModifier* 
                         p.Value = Variant(JsonTools::GetCommonValue(mValue->value));
                 }
             }
+            PRAGMA_ENABLE_DEPRECATION_WARNINGS
         }
         else
         {

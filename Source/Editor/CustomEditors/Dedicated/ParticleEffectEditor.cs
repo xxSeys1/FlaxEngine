@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Linq;
@@ -92,7 +92,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
                 _infoLabel = playbackGroup.Label(string.Empty).Label;
                 _infoLabel.AutoHeight = true;
 
-                var grid = playbackGroup.CustomContainer<UniformGridPanel>();
+                var grid = playbackGroup.UniformGrid();
                 var gridControl = grid.CustomControl;
                 gridControl.ClipChildren = false;
                 gridControl.Height = Button.DefaultHeight;
@@ -117,6 +117,9 @@ namespace FlaxEditor.CustomEditors.Dedicated
                 var data = SurfaceUtils.InitGraphParameters(parametersGroup);
                 SurfaceUtils.DisplayGraphParameters(group, data, ParameterGet, ParameterSet, Values, ParameterDefaultValue);
             }
+            
+            if (!parameters.Any())
+                groups.Label("No parameters", TextAlignment.Center);
         }
 
         /// <inheritdoc />

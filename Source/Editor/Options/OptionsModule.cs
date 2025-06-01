@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -331,6 +331,7 @@ namespace FlaxEditor.Options
 
                 SharedTooltip = new Tooltip(),
             };
+            style.SharedTooltip.HorizontalTextAlignment = Editor.Instance.Options.Options.Interface.TooltipTextAlignment;
             style.DragWindow = style.BackgroundSelected * 0.7f;
             return style;
         }
@@ -386,6 +387,7 @@ namespace FlaxEditor.Options
 
                 SharedTooltip = new Tooltip(),
             };
+            style.SharedTooltip.HorizontalTextAlignment = Editor.Instance.Options.Options.Interface.TooltipTextAlignment;
             return style;
         }
 

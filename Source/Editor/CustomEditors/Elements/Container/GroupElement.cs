@@ -1,5 +1,7 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
+using System;
+using FlaxEditor.GUI.ContextMenu;
 using FlaxEngine;
 using FlaxEngine.GUI;
 
@@ -16,13 +18,20 @@ namespace FlaxEditor.CustomEditors.Elements
         /// </summary>
         public readonly DropPanel Panel = new DropPanel
         {
+            Pivot = Float2.Zero,
             ArrowImageClosed = new SpriteBrush(Style.Current.ArrowRight),
             ArrowImageOpened = new SpriteBrush(Style.Current.ArrowDown),
             EnableDropDownIcon = true,
-            ItemsMargin = new Margin(7, 7, 3, 3),
+            ItemsMargin = new Margin(Utilities.Constants.UIMargin),
+            ItemsSpacing = Utilities.Constants.UIMargin,
             HeaderHeight = 18.0f,
             EnableContainmentLines = true,
         };
+
+        /// <summary>
+        /// Event is fired if the group can setup a context menu and the context menu is being setup.
+        /// </summary>
+        public Action<ContextMenu, DropPanel> SetupContextMenu;
 
         /// <inheritdoc />
         public override ContainerControl ContainerControl => Panel;

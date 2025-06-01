@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using FlaxEditor.Gizmo;
 using FlaxEditor.Scripting;
@@ -59,7 +59,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
             var paintValue = new ReadOnlyValueContainer(new ScriptType(typeof(ClothPaintingGizmoMode)), _gizmoMode);
             paintGroup.Object(paintValue);
             {
-                var grid = paintGroup.CustomContainer<UniformGridPanel>();
+                var grid = paintGroup.UniformGrid();
                 var gridControl = grid.CustomControl;
                 gridControl.ClipChildren = false;
                 gridControl.Height = Button.DefaultHeight;

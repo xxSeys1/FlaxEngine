@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 namespace FlaxEditor.Utilities
 {
@@ -20,5 +20,7 @@ namespace FlaxEditor.Utilities
 #else
         public const string ShowInExplorer = "Show in explorer";
 #endif
+
+        public const float UIMargin = 3.0f;
     }
 }

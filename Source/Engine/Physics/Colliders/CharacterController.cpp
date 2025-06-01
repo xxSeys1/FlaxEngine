@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 #include "CharacterController.h"
 #include "Engine/Physics/Colliders/Collider.h"
@@ -131,6 +131,11 @@ void CharacterController::SetMinMoveDistance(float value)
     _minMoveDistance = Math::Max(value, 0.0f);
 }
 
+void CharacterController::SetAutoGravity(bool value)
+{
+    _autoGravity = value;
+}
+
 Vector3 CharacterController::GetVelocity() const
 {
     return _controller ? PhysicsBackend::GetRigidDynamicActorLinearVelocity(PhysicsBackend::GetControllerRigidDynamicActor(_controller)) : Vector3::Zero;
@@ -187,9 +192,9 @@ void CharacterController::DrawPhysicsDebug(RenderView& view)
     const float height = Math::Max(Math::Abs(_height) * scaling, CC_MIN_SIZE);
     const Vector3 position = _transform.LocalToWorld(_center);
     if (view.Mode == ViewMode::PhysicsColliders)
-        DEBUG_DRAW_TUBE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::LightYellow, 0, true);
+        DEBUG_DRAW_CAPSULE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::LightYellow, 0, true);
     else
-        DEBUG_DRAW_WIRE_TUBE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::GreenYellow * 0.8f, 0, true);
+        DEBUG_DRAW_WIRE_CAPSULE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::GreenYellow * 0.8f, 0, true);
 }
 
 void CharacterController::OnDebugDrawSelected()
@@ -198,7 +203,7 @@ void CharacterController::OnDebugDrawSelected()
     const float radius = Math::Max(Math::Abs(_radius) * scaling, CC_MIN_SIZE);
     const float height = Math::Max(Math::Abs(_height) * scaling, CC_MIN_SIZE);
     const Vector3 position = _transform.LocalToWorld(_center);
-    DEBUG_DRAW_WIRE_TUBE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::GreenYellow, 0, false);
+    DEBUG_DRAW_WIRE_CAPSULE(position, Quaternion::Euler(90, 0, 0), radius, height, Color::GreenYellow, 0, false);
 
     // Base
     Collider::OnDebugDrawSelected();
@@ -261,7 +266,15 @@ void CharacterController::UpdateBounds()
 
 void CharacterController::AddMovement(const Vector3& translation, const Quaternion& rotation)
 {
-    Move(translation);
+    Vector3 displacement = translation;
+    if (_autoGravity)
+    {
+        // Apply gravity
+        const float deltaTime = Time::GetCurrentSafe()->DeltaTime.GetTotalSeconds();
+        displacement += GetPhysicsScene()->GetGravity() * deltaTime;
+    }
+
+    Move(displacement);
 
     if (!rotation.IsIdentity())
     {

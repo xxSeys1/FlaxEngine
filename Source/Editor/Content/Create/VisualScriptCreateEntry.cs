@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
 using FlaxEngine;
@@ -11,6 +11,9 @@ namespace FlaxEditor.Content.Create
     /// <seealso cref="FlaxEditor.Content.Create.CreateFileEntry" />
     public class VisualScriptCreateEntry : CreateFileEntry
     {
+        /// <inheritdoc/>
+        public override bool CanBeCreated => _options.BaseClass != null;
+
         /// <summary>
         /// The create options.
         /// </summary>

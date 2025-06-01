@@ -1,5 +1,6 @@
-// Copyright (c) 2012-2024 Wojciech Figat. All rights reserved.
+// Copyright (c) Wojciech Figat. All rights reserved.
 
+using System.IO;
 using System.Xml;
 using FlaxEditor.Content;
 using FlaxEditor.Content.Import;
@@ -53,8 +54,12 @@ namespace FlaxEditor.Windows.Assets
 
                     base.Initialize(layout);
 
-                    layout.Space(10);
-                    var reimportButton = layout.Button("Reimport");
+                    // Creates the import path UI
+                    var pathGroup = layout.Group("Import Path");
+                    Utilities.Utils.CreateImportPathUI(pathGroup, window.Item as BinaryAssetItem);
+
+                    pathGroup.Space(5);
+                    var reimportButton = pathGroup.Button("Reimport");
                     reimportButton.Button.Clicked += () => ((PropertiesProxy)Values[0]).Reimport();
                 }
             }
