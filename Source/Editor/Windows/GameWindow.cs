@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using FlaxEditor.Gizmo;
+using FlaxEditor.GUI;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.GUI.Input;
 using FlaxEditor.Options;
@@ -32,6 +34,16 @@ namespace FlaxEditor.Windows
         private GUI.Docking.DockState _maximizeRestoreDockState;
         private GUI.Docking.DockPanel _maximizeRestoreDockTo;
         private CursorLockMode _cursorLockMode = CursorLockMode.None;
+
+        private float _toolStripHeight = 24;
+
+        private ToolStripButton _focusSettingsButton;
+        private ToolStripButton _viewportSettingsButton;
+        private ToolStripButton _toggleGuiButton;
+        private ToolStripButton _toggleGuiEditButton;
+        private ToolStripButton _toggleDebugDrawButton;
+        private ToolStripButton _audioMutedButton;
+        private FloatValueBox _audioVolumeValueBox;
 
         // Viewport scaling variables
         private List<ViewportScaleOptions> _defaultViewportScaling = new List<ViewportScaleOptions>();
@@ -80,6 +92,7 @@ namespace FlaxEditor.Windows
                 {
                     _showGUI = value;
                     _guiRoot.Visible = value;
+                    _toggleGuiButton.Checked = value;
                 }
             }
         }
@@ -96,6 +109,7 @@ namespace FlaxEditor.Windows
                 {
                     _editGUI = value;
                     _guiRoot.Editable = value;
+                    _toggleGuiEditButton.Checked = value;
                 }
             }
         }
@@ -106,9 +120,12 @@ namespace FlaxEditor.Windows
         public bool ShowDebugDraw
         {
             get => _showDebugDraw;
-            set => _showDebugDraw = value;
+            set
+            {
+                _showDebugDraw = value;
+                _toggleDebugDrawButton.Checked = value;
+            } 
         }
-
 
         /// <summary>
         /// Gets or set a value indicating whether Audio is muted.
@@ -120,6 +137,7 @@ namespace FlaxEditor.Windows
             {
                 Audio.MasterVolume = value ? 0 : AudioVolume;
                 _audioMuted = value;
+                _audioMutedButton.Checked = value;
             }
         }
 
@@ -134,6 +152,7 @@ namespace FlaxEditor.Windows
                 if (!AudioMuted)
                     Audio.MasterVolume = value;
                 _audioVolume = value;
+                _audioVolumeValueBox.Value = value;
             }
         }
 
@@ -307,16 +326,22 @@ namespace FlaxEditor.Windows
             Title = "Game";
             Icon = editor.Icons.Play64;
             AutoFocus = true;
+            
+            // Link editor options
+            Editor.Options.OptionsChanged += OnOptionsChanged;
+            OnOptionsChanged(Editor.Options.Options);
+
+            CreateOptionsToolStrip();
 
             var task = MainRenderTask.Instance;
-
+            
             // Setup viewport
             _viewport = new RenderOutputControl(task)
             {
                 AnchorPreset = AnchorPresets.StretchAll,
-                Offsets = Margin.Zero,
+                Offsets = new Margin(0, 0, _toolStripHeight, 0),
                 AutoFocus = false,
-                Parent = this
+                Parent = this,
             };
             task.PostRender += OnPostRender;
 
@@ -331,10 +356,6 @@ namespace FlaxEditor.Windows
 
             Editor.StateMachine.PlayingState.SceneDuplicating += PlayingStateOnSceneDuplicating;
             Editor.StateMachine.PlayingState.SceneRestored += PlayingStateOnSceneRestored;
-
-            // Link editor options
-            Editor.Options.OptionsChanged += OnOptionsChanged;
-            OnOptionsChanged(Editor.Options.Options);
 
             InputActions.Add(options => options.TakeScreenshot, () => Screenshot.Capture(string.Empty));
             InputActions.Add(options => options.DebuggerUnlockMouse, UnlockMouseInPlay);
@@ -407,6 +428,165 @@ namespace FlaxEditor.Windows
             });
         }
 
+        private void CreateOptionsToolStrip()
+        {
+            var style = Style.Current;
+            var styleSmallFont = style.FontSmall;
+
+            var toolStrip = new ToolStrip()
+            {
+                AnchorPreset = AnchorPresets.HorizontalStretchTop,
+                Height = _toolStripHeight,
+                Parent = this,
+            };
+
+            _focusSettingsButton = toolStrip.AddButton("Focus", ShowPlayModeFocusOptions);
+
+            toolStrip.AddSeparator();
+
+            _viewportSettingsButton = toolStrip.AddButton("Viewport Settings", ShowViewportSettings);
+            
+            toolStrip.AddSeparator();
+
+            _toggleGuiButton = toolStrip.AddButton("Show GUI", () => {
+                ShowGUI = !ShowGUI;
+                _toggleGuiButton.Checked = ShowGUI;
+            });
+            _toggleGuiButton.Checked = ShowGUI;
+
+            _toggleGuiEditButton = toolStrip.AddButton("Edit GUI", () => {
+                EditGUI = !EditGUI;
+                _toggleGuiEditButton.Checked = EditGUI;
+            });
+            _toggleGuiEditButton.Checked = EditGUI;
+
+            toolStrip.AddSeparator();
+
+            _toggleDebugDrawButton = toolStrip.AddButton("Debug Draw", () => {
+                ShowDebugDraw = !ShowDebugDraw;
+                _toggleDebugDrawButton.Checked = ShowDebugDraw;
+            });
+            _toggleDebugDrawButton.Checked = ShowDebugDraw;
+
+            toolStrip.AddSeparator();
+
+            _audioMutedButton = toolStrip.AddButton(Editor.Instance.Icons.Speaker32, () =>
+            {
+                AudioMuted = !AudioMuted;
+                _audioMutedButton.Checked = !AudioMuted;
+            });
+            _audioMutedButton.Checked = !AudioMuted;
+
+            var audioVolumeLabel = new Label
+            {
+                Text = "Audio Volume",
+                HorizontalAlignment = TextAlignment.Near,
+                Parent = toolStrip,
+            };
+            audioVolumeLabel.Width = styleSmallFont.MeasureText(audioVolumeLabel.Text).X + 2;
+            _audioVolumeValueBox = new FloatValueBox(AudioVolume, 0, 0, 50, 0, 1)
+            {
+                Parent = toolStrip,
+            };
+            _audioVolumeValueBox.ValueChanged += () => AudioVolume = _audioVolumeValueBox.Value;
+
+            toolStrip.AddSeparator();
+
+            toolStrip.AddButton("Take Screenshot", TakeScreenshot);
+        }
+
+        private void ShowViewportSettings()
+        {
+            var cm = new ContextMenu();
+
+            // Viewport Brightness
+            {
+                var brightness = cm.AddButton("Brightness");
+                brightness.CloseMenuOnClick = false;
+                var brightnessValue = new FloatValueBox(_viewport.Brightness, 140, 2, 50.0f, 0.001f, 10.0f, 0.001f)
+                {
+                    Parent = brightness
+                };
+                brightnessValue.ValueChanged += () => _viewport.Brightness = brightnessValue.Value;
+            }
+
+            // Viewport Resolution
+            {
+                var resolution = cm.AddButton("Resolution");
+                resolution.CloseMenuOnClick = false;
+                var resolutionValue = new FloatValueBox(_viewport.ResolutionScale, 140, 2, 50.0f, 0.1f, 4.0f, 0.001f)
+                {
+                    Parent = resolution
+                };
+                resolutionValue.ValueChanged += () => _viewport.ResolutionScale = resolutionValue.Value;
+            }
+
+            // Viewport aspect ratio
+            {
+                // Create default scaling options if they dont exist from deserialization.
+                if (_defaultViewportScaling.Count == 0)
+                {
+                    _defaultViewportScaling.Add(new ViewportScaleOptions
+                    {
+                        Label = "Free Aspect",
+                        ScaleType = ViewportScaleType.Aspect,
+                        Size = new Int2(1, 1),
+                        Active = true,
+                    });
+                    _defaultViewportScaling.Add(new ViewportScaleOptions
+                    {
+                        Label = "16:9 Aspect",
+                        ScaleType = ViewportScaleType.Aspect,
+                        Size = new Int2(16, 9),
+                        Active = false,
+                    });
+                    _defaultViewportScaling.Add(new ViewportScaleOptions
+                    {
+                        Label = "16:10 Aspect",
+                        ScaleType = ViewportScaleType.Aspect,
+                        Size = new Int2(16, 10),
+                        Active = false,
+                    });
+                    _defaultViewportScaling.Add(new ViewportScaleOptions
+                    {
+                        Label = "1920x1080 Resolution",
+                        ScaleType = ViewportScaleType.Resolution,
+                        Size = new Int2(1920, 1080),
+                        Active = false,
+                    });
+                    _defaultViewportScaling.Add(new ViewportScaleOptions
+                    {
+                        Label = "2560x1440 Resolution",
+                        ScaleType = ViewportScaleType.Resolution,
+                        Size = new Int2(2560, 1440),
+                        Active = false,
+                    });
+                }
+
+                var vsMenu = cm.AddChildMenu("Size").ContextMenu;
+
+                CreateViewportSizingContextMenu(vsMenu);
+            }
+
+            cm.Width = 10f;
+
+            cm.Show(_viewportSettingsButton, new Float2(0f, _viewportSettingsButton.Height));
+        }
+
+        private void ShowPlayModeFocusOptions()
+        {
+            // Focus on play
+            var cm = new ContextMenu();
+            GenerateFocusOptionsContextMenu(cm);
+            cm.AddSeparator();
+
+            var button = cm.AddButton("Remove override");
+            button.TooltipText = "Reset the override to the value set in the editor options.";
+            button.Clicked += () => FocusOnPlayOption = Editor.Instance.Options.Options.Interface.FocusOnPlayMode;
+
+            cm.Show(_focusSettingsButton, new Float2(0f, _focusSettingsButton.Height));
+        }
+
         private void ChangeViewportRatio(ViewportScaleOptions v)
         {
             if (v == null)
@@ -463,26 +643,21 @@ namespace FlaxEditor.Windows
 
         private void ResizeViewport()
         {
+            if (_viewport == null)
+                return;
+
             if (!_freeAspect)
-            {
-                _windowAspectRatio = Width / Height;
-            }
+                _windowAspectRatio = Width / (Height - _toolStripHeight);
             else
-            {
                 _windowAspectRatio = 1;
-            }
 
             var scaleWidth = _viewportAspectRatio / _windowAspectRatio;
             var scaleHeight = _windowAspectRatio / _viewportAspectRatio;
 
             if (scaleHeight < 1)
-            {
-                _viewport.Bounds = new Rectangle(0, Height * (1 - scaleHeight) / 2, Width, Height * scaleHeight);
-            }
+                _viewport.Bounds = new Rectangle(0, (Height - _toolStripHeight) * (1 - scaleHeight) / 2 + _toolStripHeight, Width, (Height - _toolStripHeight) * scaleHeight);
             else
-            {
-                _viewport.Bounds = new Rectangle(Width * (1 - scaleWidth) / 2, 0, Width * scaleWidth, Height);
-            }
+                _viewport.Bounds = new Rectangle(Width * (1 - scaleWidth) / 2, _toolStripHeight, Width * scaleWidth, (Height - _toolStripHeight));
             _viewport.SyncBackbufferSize();
             PerformLayout();
         }
@@ -581,156 +756,6 @@ namespace FlaxEditor.Windows
             {
                 Parent.Focus();
             }
-        }
-
-        /// <inheritdoc />
-        public override void OnShowContextMenu(ContextMenu menu)
-        {
-            base.OnShowContextMenu(menu);
-
-            // Focus on play
-            {
-                var pfMenu = menu.AddChildMenu("Focus On Play Override").ContextMenu;
-
-                GenerateFocusOptionsContextMenu(pfMenu);
-
-                pfMenu.AddSeparator();
-
-                var button = pfMenu.AddButton("Remove override");
-                button.TooltipText = "Reset the override to the value set in the editor options.";
-                button.Clicked += () => FocusOnPlayOption = Editor.Instance.Options.Options.Interface.FocusOnPlayMode;
-            }
-
-            menu.AddSeparator();
-
-            // Viewport Brightness
-            {
-                var brightness = menu.AddButton("Viewport Brightness");
-                brightness.CloseMenuOnClick = false;
-                var brightnessValue = new FloatValueBox(_viewport.Brightness, 140, 2, 50.0f, 0.001f, 10.0f, 0.001f)
-                {
-                    Parent = brightness
-                };
-                brightnessValue.ValueChanged += () => _viewport.Brightness = brightnessValue.Value;
-            }
-
-            // Viewport Resolution
-            {
-                var resolution = menu.AddButton("Viewport Resolution");
-                resolution.CloseMenuOnClick = false;
-                var resolutionValue = new FloatValueBox(_viewport.ResolutionScale, 140, 2, 50.0f, 0.1f, 4.0f, 0.001f)
-                {
-                    Parent = resolution
-                };
-                resolutionValue.ValueChanged += () => _viewport.ResolutionScale = resolutionValue.Value;
-            }
-
-            // Viewport aspect ratio
-            {
-                // Create default scaling options if they dont exist from deserialization.
-                if (_defaultViewportScaling.Count == 0)
-                {
-                    _defaultViewportScaling.Add(new ViewportScaleOptions
-                    {
-                        Label = "Free Aspect",
-                        ScaleType = ViewportScaleType.Aspect,
-                        Size = new Int2(1, 1),
-                        Active = true,
-                    });
-                    _defaultViewportScaling.Add(new ViewportScaleOptions
-                    {
-                        Label = "16:9 Aspect",
-                        ScaleType = ViewportScaleType.Aspect,
-                        Size = new Int2(16, 9),
-                        Active = false,
-                    });
-                    _defaultViewportScaling.Add(new ViewportScaleOptions
-                    {
-                        Label = "16:10 Aspect",
-                        ScaleType = ViewportScaleType.Aspect,
-                        Size = new Int2(16, 10),
-                        Active = false,
-                    });
-                    _defaultViewportScaling.Add(new ViewportScaleOptions
-                    {
-                        Label = "1920x1080 Resolution (Full HD)",
-                        ScaleType = ViewportScaleType.Resolution,
-                        Size = new Int2(1920, 1080),
-                        Active = false,
-                    });
-                    _defaultViewportScaling.Add(new ViewportScaleOptions
-                    {
-                        Label = "2560x1440 Resolution (2K)",
-                        ScaleType = ViewportScaleType.Resolution,
-                        Size = new Int2(2560, 1440),
-                        Active = false,
-                    });
-                }
-
-                var vsMenu = menu.AddChildMenu("Viewport Size").ContextMenu;
-
-                CreateViewportSizingContextMenu(vsMenu);
-            }
-
-            // Take Screenshot
-            {
-                var takeScreenshot = menu.AddButton("Take Screenshot");
-                takeScreenshot.Clicked += TakeScreenshot;
-            }
-
-            menu.AddSeparator();
-
-            // Show GUI
-            {
-                var button = menu.AddButton("Show GUI");
-                button.CloseMenuOnClick = false;
-                var checkbox = new CheckBox(140, 2, ShowGUI) { Parent = button };
-                checkbox.StateChanged += x => ShowGUI = x.Checked;
-            }
-
-            // Edit GUI
-            {
-                var button = menu.AddButton("Edit GUI");
-                var checkbox = new CheckBox(140, 2, EditGUI) { Parent = button };
-                checkbox.StateChanged += x => EditGUI = x.Checked;
-            }
-
-            // Show Debug Draw
-            {
-                var button = menu.AddButton("Show Debug Draw");
-                button.CloseMenuOnClick = false;
-                var checkbox = new CheckBox(140, 2, ShowDebugDraw) { Parent = button };
-                checkbox.StateChanged += x => ShowDebugDraw = x.Checked;
-            }
-
-            // Clear Debug Draw
-            if (DebugDraw.CanClear())
-            {
-                var button = menu.AddButton("Clear Debug Draw");
-                button.CloseMenuOnClick = false;
-                button.Clicked += () => DebugDraw.Clear();
-            }
-
-            menu.AddSeparator();
-
-            // Mute Audio
-            {
-                var button = menu.AddButton("Mute Audio");
-                button.CloseMenuOnClick = false;
-                var checkbox = new CheckBox(140, 2, AudioMuted) { Parent = button };
-                checkbox.StateChanged += x => AudioMuted = x.Checked;
-            }
-
-            // Audio Volume
-            {
-                var button = menu.AddButton("Audio Volume");
-                button.CloseMenuOnClick = false;
-                var slider = new FloatValueBox(AudioVolume, 140, 2, 50, 0, 1) { Parent = button };
-                slider.ValueChanged += () => AudioVolume = slider.Value;
-            }
-
-            menu.MinimumWidth = 200;
-            menu.AddSeparator();
         }
 
         private void GenerateFocusOptionsContextMenu(ContextMenu pfMenu)
@@ -1009,6 +1034,9 @@ namespace FlaxEditor.Windows
         {
             base.Draw();
 
+            if (AudioMuted)
+                Render2D.DrawLine(_audioMutedButton.BottomRight - 4f, _audioMutedButton.UpperLeft + 4f, Color.White);
+
             if (Camera.MainCamera == null)
             {
                 var style = Style.Current;
@@ -1032,19 +1060,20 @@ namespace FlaxEditor.Windows
                     Render2D.DrawText(style.FontSmall, text, rect, style.Foreground * alpha, TextAlignment.Near, TextAlignment.Far);
                 }
 
+                // TODO: FIx box
                 timeout = 1.0f;
                 fadeOutTime = 0.6f;
                 animTime = time - timeout;
-                if (animTime < 0)
+                if (_viewport != null && animTime < 0)
                 {
                     float alpha = Mathf.Saturate(-animTime / fadeOutTime);
-                    Render2D.DrawRectangle(new Rectangle(new Float2(4), Size - 8), style.SelectionBorder * alpha);
+                    Render2D.DrawRectangle(new Rectangle(new Float2(4, 4 + _toolStripHeight), new Float2(Size.X - 8, Size.Y - 8 - _toolStripHeight)), style.SelectionBorder * alpha);
                 }
 
                 // Add overlay during debugger breakpoint hang
                 if (Editor.Simulation.IsDuringBreakpointHang)
                 {
-                    var bounds = new Rectangle(Float2.Zero, Size);
+                    var bounds = new Rectangle(Float2.Zero, Size - _toolStripHeight);
                     Render2D.FillRectangle(bounds, new Color(0.0f, 0.0f, 0.0f, 0.2f));
                     Render2D.DrawText(Style.Current.FontLarge, "Debugger breakpoint hit...", bounds, Color.White, TextAlignment.Center, TextAlignment.Center);
                 }

@@ -54,6 +54,7 @@ namespace FlaxEditor
         public SpriteHandle Error32;
         public SpriteHandle Bone32;
         public SpriteHandle BoneFull32;
+        public SpriteHandle Speaker32;
 
         // Visject
         public SpriteHandle VisjectBoxOpen32;
