@@ -48,6 +48,7 @@ namespace FlaxEditor.GUI.Tabs
                 {
                     Tab.PerformLayout();
                     Tabs.SelectedTab = Tab;
+                    Tab.PerformLayout(true);
                     Tabs.Focus();
                 }
                 return true;

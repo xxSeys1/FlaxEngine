@@ -206,6 +206,7 @@ namespace FlaxEditor.Windows
             // Content structure tree
             _tree = new Tree(false)
             {
+                DrawRootTreeLine = false,
                 Parent = _contentTreePanel,
             };
             _tree.SelectedChanged += OnTreeSelectionChanged;
