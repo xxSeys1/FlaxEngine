@@ -35,7 +35,7 @@ namespace FlaxEditor.CustomEditors.Editors
             }
 
             _element = layout.TextBox(isMultiLine);
-            _watermarkColor = _defaultWatermarkColor = _element.TextBox.WatermarkTextColor;
+            _defaultWatermarkColor = _element.TextBox.WatermarkTextColor;
             if (watermarkAttribute is WatermarkAttribute watermark)
             {
                 _watermarkText = watermark.WatermarkText;

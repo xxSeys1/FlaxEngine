@@ -21,7 +21,6 @@ namespace FlaxEditor.CustomEditors.Editors
     public sealed class LocalizedStringEditor : GenericEditor
     {
         private TextBoxElement _idElement, _valueElement;
-        private Button _viewStringButton;
 
         /// <inheritdoc />
         public override DisplayStyle Style => DisplayStyle.Inline;
@@ -71,21 +70,6 @@ namespace FlaxEditor.CustomEditors.Editors
             };
             addString.SetAnchorPreset(AnchorPresets.MiddleRight, false, true);
             addString.ButtonClicked += OnAddStringClicked;
-
-            var viewString = new Button
-            {
-                Visible = false,
-                Width = 16.0f,
-                BackgroundColor = Color.White,
-                BackgroundColorHighlighted = Color.Gray,
-                BackgroundBrush = new SpriteBrush(Editor.Instance.Icons.Search12),
-                TooltipText = "Find localized text in Localized String Table asset for the current locale...",
-                Parent = valueElement.TextBox,
-            };
-            viewString.SetAnchorPreset(AnchorPresets.MiddleRight, false, true);
-            viewString.LocalX -= 16.0f;
-            viewString.ButtonClicked += OnViewStringClicked;
-            _viewStringButton = viewString;
         }
 
         /// <inheritdoc />
@@ -96,7 +80,6 @@ namespace FlaxEditor.CustomEditors.Editors
             if (_valueElement != null)
             {
                 _valueElement.TextBox.WatermarkText = Localization.GetString(_idElement.Text);
-                _viewStringButton.Visible = !string.IsNullOrEmpty(_valueElement.TextBox.WatermarkText);
             }
         }
 
@@ -109,21 +92,14 @@ namespace FlaxEditor.CustomEditors.Editors
             _valueElement = null;
         }
 
-        private bool GetSettings(out LocalizationSettings settings)
+        private void OnSelectStringClicked(Button button)
         {
-            settings = GameSettings.Load<LocalizationSettings>();
+            var settings = GameSettings.Load<LocalizationSettings>();
             if (settings?.LocalizedStringTables == null || settings.LocalizedStringTables.Length == 0)
             {
                 MessageBox.Show("No valid localization settings setup.");
-                return true;
-            }
-            return false;
-        }
-
-        private void OnSelectStringClicked(Button button)
-        {
-            if (GetSettings(out var settings))
                 return;
+            }
             Profiler.BeginEvent("LocalizedStringEditor.OnSelectStringClicked");
             var allKeys = new HashSet<string>();
             for (int i = 0; i < settings.LocalizedStringTables.Length; i++)
@@ -160,7 +136,6 @@ namespace FlaxEditor.CustomEditors.Editors
                 {
                     menu.Hide();
                     _idElement.TextBox.SetTextAsUser(after[0].Text);
-                    _valueElement.TextBox.SetTextAsUser(string.Empty);
                 }
             };
             searchBox.TextChanged += delegate
@@ -183,8 +158,12 @@ namespace FlaxEditor.CustomEditors.Editors
 
         private void OnAddStringClicked(Button button)
         {
-            if (GetSettings(out var settings))
+            var settings = GameSettings.Load<LocalizationSettings>();
+            if (settings?.LocalizedStringTables == null || settings.LocalizedStringTables.Length == 0)
+            {
+                MessageBox.Show("No valid localization settings setup.");
                 return;
+            }
             Profiler.BeginEvent("LocalizedStringEditor.OnAddStringClicked");
             var allKeys = new HashSet<string>();
             for (int i = 0; i < settings.LocalizedStringTables.Length; i++)
@@ -251,31 +230,6 @@ namespace FlaxEditor.CustomEditors.Editors
             _valueElement.TextBox.SetTextAsUser(null);
             _idElement.TextBox.SetTextAsUser(newKey);
             Profiler.EndEvent();
-        }
-
-        private void OnViewStringClicked(Button button)
-        {
-            if (GetSettings(out var settings))
-                return;
-            var id = _idElement.TextBox.Text;
-            var value = _valueElement.TextBox.WatermarkText;
-            for (int i = 0; i < settings.LocalizedStringTables.Length; i++)
-            {
-                var table = settings.LocalizedStringTables[i];
-                if (table && !table.WaitForLoaded())
-                {
-                    var entries = table.Entries;
-                    if (entries.TryGetValue(id, out var messages))
-                    {
-                        if (messages.Length != 0 && messages[0] == value)
-                        {
-                            Editor.Instance.ContentEditing.Open(table);
-                            return;
-                        }
-                    }
-                }
-            }
-            MessageBox.Show("Unable to find localized string table.");
         }
     }
 }

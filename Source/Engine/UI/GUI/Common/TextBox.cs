@@ -298,13 +298,9 @@ namespace FlaxEngine.GUI
                     color *= 0.85f;
                 Render2D.DrawText(font, text, color, ref _layout, TextMaterial);
             }
-            else
+            else if (!string.IsNullOrEmpty(_watermarkText))
             {
-                text = _watermarkText;
-                if (text.Length > 0)
-                {
-                    Render2D.DrawText(font, _watermarkText, WatermarkTextColor, ref _layout, TextMaterial);
-                }
+                Render2D.DrawText(font, _watermarkText, WatermarkTextColor, ref _layout, TextMaterial);
             }
 
             // Caret
