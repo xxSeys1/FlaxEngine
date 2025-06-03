@@ -197,9 +197,12 @@ namespace FlaxEngine
         }
 
         /// <inheritdoc />
-        public override bool Equals(object value)
+        public override bool Equals(object other)
         {
-            return value is Color other && Equals(ref other);
+            if (!(other is Color))
+                return false;
+            var color = (Color)other;
+            return Equals(ref color);
         }
 
         /// <summary>
@@ -210,7 +213,7 @@ namespace FlaxEngine
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(ref Color other)
         {
-            return R == other.R && G == other.G && B == other.B && A == other.A;
+            return Mathf.NearEqual(other.R, R) && Mathf.NearEqual(other.G, G) && Mathf.NearEqual(other.B, B) && Mathf.NearEqual(other.A, A);
         }
 
         /// <inheritdoc />
@@ -658,23 +661,23 @@ namespace FlaxEngine
         /// <summary>
         /// Compares two colors.
         /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
+        /// <param name="lhs">The left.</param>
+        /// <param name="rhs">The right.</param>
         /// <returns>True if colors are equal, otherwise false.</returns>
-        public static bool operator ==(Color left, Color right)
+        public static bool operator ==(Color lhs, Color rhs)
         {
-            return left.Equals(ref right);
+            return lhs.Equals(ref rhs);
         }
 
         /// <summary>
         /// Compares two colors.
         /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
+        /// <param name="lhs">The left.</param>
+        /// <param name="rhs">The right.</param>
         /// <returns>True if colors are not equal, otherwise false.</returns>
-        public static bool operator !=(Color left, Color right)
+        public static bool operator !=(Color lhs, Color rhs)
         {
-            return !left.Equals(ref right);
+            return !lhs.Equals(ref rhs);
         }
 
         /// <summary>

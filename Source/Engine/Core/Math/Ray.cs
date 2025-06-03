@@ -428,23 +428,23 @@ namespace FlaxEngine
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(ref Ray other)
+        public bool Equals(ref Ray value)
         {
-            return Position == other.Position && Direction == other.Direction;
+            return (Position == value.Position) && (Direction == value.Direction);
         }
 
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Ray other)
+        public bool Equals(Ray value)
         {
-            return Equals(ref other);
+            return Equals(ref value);
         }
 
         /// <summary>

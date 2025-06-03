@@ -44,7 +44,7 @@ void RigidBody::SetIsKinematic(const bool value)
 
 void RigidBody::SetLinearDamping(float value)
 {
-    if (value == _linearDamping)
+    if (Math::NearEqual(value, _linearDamping))
         return;
     _linearDamping = value;
     if (_actor)
@@ -53,7 +53,7 @@ void RigidBody::SetLinearDamping(float value)
 
 void RigidBody::SetAngularDamping(float value)
 {
-    if (value == _angularDamping)
+    if (Math::NearEqual(value, _angularDamping))
         return;
     _angularDamping = value;
     if (_actor)
@@ -108,7 +108,7 @@ void RigidBody::SetUpdateMassWhenScaleChanges(bool value)
 
 void RigidBody::SetMaxAngularVelocity(float value)
 {
-    if (value == _maxAngularVelocity)
+    if (Math::NearEqual(value, _maxAngularVelocity))
         return;
     _maxAngularVelocity = value;
     if (_actor)
@@ -135,7 +135,7 @@ float RigidBody::GetMass() const
 
 void RigidBody::SetMass(float value)
 {
-    if (value == _mass)
+    if (Math::NearEqual(value, _mass))
         return;
     _mass = value;
     _overrideMass = true;
@@ -149,7 +149,7 @@ float RigidBody::GetMassScale() const
 
 void RigidBody::SetMassScale(float value)
 {
-    if (value == _massScale)
+    if (Math::NearEqual(value, _massScale))
         return;
     _massScale = value;
     UpdateMass();
@@ -157,7 +157,7 @@ void RigidBody::SetMassScale(float value)
 
 void RigidBody::SetCenterOfMassOffset(const Float3& value)
 {
-    if (value == _centerOfMassOffset)
+    if (Float3::NearEqual(value, _centerOfMassOffset))
         return;
     _centerOfMassOffset = value;
     if (_actor)
@@ -380,7 +380,7 @@ void RigidBody::UpdateBounds()
 void RigidBody::UpdateScale()
 {
     const Float3 scale = GetScale();
-    if (_cachedScale == scale)
+    if (Float3::NearEqual(_cachedScale, scale))
         return;
     _cachedScale = scale;
 

@@ -60,7 +60,7 @@ float StaticModel::GetBoundsScale() const
 
 void StaticModel::SetBoundsScale(float value)
 {
-    if (_boundsScale == value)
+    if (Math::NearEqual(_boundsScale, value))
         return;
 
     _boundsScale = value;

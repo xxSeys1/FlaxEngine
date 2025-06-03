@@ -582,23 +582,23 @@ namespace FlaxEngine
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(ref Plane other)
+        public bool Equals(ref Plane value)
         {
-            return Normal == other.Normal && D == other.D;
+            return Normal == value.Normal && D == value.D;
         }
 
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Plane other)
+        public bool Equals(Plane value)
         {
-            return Equals(ref other);
+            return Equals(ref value);
         }
 
         /// <summary>
@@ -608,7 +608,10 @@ namespace FlaxEngine
         /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         public override bool Equals(object value)
         {
-            return value is Plane other && Equals(ref other);
+            if (!(value is Plane))
+                return false;
+            var strongValue = (Plane)value;
+            return Equals(ref strongValue);
         }
     }
 }

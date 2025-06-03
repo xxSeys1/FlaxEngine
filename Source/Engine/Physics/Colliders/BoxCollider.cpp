@@ -12,7 +12,7 @@ BoxCollider::BoxCollider(const SpawnParams& params)
 
 void BoxCollider::SetSize(const Float3& value)
 {
-    if (value == _size)
+    if (Float3::NearEqual(value, _size))
         return;
     _size = value;
 

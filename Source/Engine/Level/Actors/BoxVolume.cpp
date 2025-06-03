@@ -12,7 +12,7 @@ BoxVolume::BoxVolume(const SpawnParams& params)
 
 void BoxVolume::SetSize(const Vector3& value)
 {
-    if (value != _size)
+    if (!Vector3::NearEqual(value, _size))
     {
         const auto prevBounds = _box;
         _size = value;

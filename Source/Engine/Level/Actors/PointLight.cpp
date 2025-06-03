@@ -49,7 +49,7 @@ float PointLight::GetScaledRadius() const
 void PointLight::SetRadius(float value)
 {
     value = Math::Max(0.0f, value);
-    if (value == _radius)
+    if (Math::NearEqual(value, _radius))
         return;
 
     _radius = value;

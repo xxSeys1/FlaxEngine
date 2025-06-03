@@ -57,7 +57,7 @@ float SpotLight::GetScaledRadius() const
 void SpotLight::SetRadius(float value)
 {
     value = Math::Max(0.0f, value);
-    if (value == _radius)
+    if (Math::NearEqual(value, _radius))
         return;
 
     _radius = value;
@@ -70,7 +70,7 @@ void SpotLight::SetOuterConeAngle(float value)
     value = Math::Clamp(value, 0.0f, 89.0f);
 
     // Check if value will change
-    if (value != _outerConeAngle)
+    if (!Math::NearEqual(value, _outerConeAngle))
     {
         // Change values
         _innerConeAngle = Math::Min(_innerConeAngle, value - ZeroTolerance);
@@ -86,7 +86,7 @@ void SpotLight::SetInnerConeAngle(float value)
     value = Math::Clamp(value, 0.0f, 89.0f);
 
     // Check if value will change
-    if (value != _innerConeAngle)
+    if (!Math::NearEqual(value, _innerConeAngle))
     {
         // Change values
         _innerConeAngle = value;

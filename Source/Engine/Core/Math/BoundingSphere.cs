@@ -487,23 +487,23 @@ namespace FlaxEngine
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(ref BoundingSphere other)
+        public bool Equals(ref BoundingSphere value)
         {
-            return Center == other.Center && Radius == other.Radius;
+            return (Center == value.Center) && (Radius == value.Radius);
         }
 
         /// <summary>
         /// Determines whether the specified <see cref="Vector4" /> is equal to this instance.
         /// </summary>
-        /// <param name="other">The <see cref="Vector4" /> to compare with this instance.</param>
+        /// <param name="value">The <see cref="Vector4" /> to compare with this instance.</param>
         /// <returns><c>true</c> if the specified <see cref="Vector4" /> is equal to this instance; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(BoundingSphere other)
+        public bool Equals(BoundingSphere value)
         {
-            return Equals(ref other);
+            return Equals(ref value);
         }
 
         /// <summary>

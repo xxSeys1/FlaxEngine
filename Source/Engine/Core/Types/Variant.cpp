@@ -1162,9 +1162,9 @@ bool Variant::operator==(const Variant& other) const
         case VariantType::Enum:
             return AsEnum == other.AsEnum;
         case VariantType::Float:
-            return AsFloat == other.AsFloat;
+            return Math::NearEqual(AsFloat, other.AsFloat);
         case VariantType::Double:
-            return AsDouble == other.AsDouble;
+            return Math::Abs(AsDouble - other.AsDouble) < ZeroTolerance;
         case VariantType::Pointer:
             return AsPointer == other.AsPointer;
         case VariantType::String:
