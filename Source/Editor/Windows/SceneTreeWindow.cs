@@ -150,6 +150,7 @@ namespace FlaxEditor.Windows
             _tree.UnlockChildrenRecursive();
             PerformLayout();
             PerformLayout();
+            ScrollToSelectedNode();
         }
 
         private void Spawn(Type type)
