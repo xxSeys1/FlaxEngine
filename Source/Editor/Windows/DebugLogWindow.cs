@@ -353,11 +353,11 @@ namespace FlaxEditor.Windows
             }).SetAutoCheck(true).LinkTooltip("Performs auto pause on error.");
             toolstrip.AddSeparator();
             _groupButtons[0] = (ToolStripButton)toolstrip.AddButton(editor.Icons.Error32, () => { OnGroupButtonPressed(0); })
-                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides error messages");
+                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides error messages.");
             _groupButtons[1] = (ToolStripButton)toolstrip.AddButton(editor.Icons.Warning32, () => { OnGroupButtonPressed(1); })
-                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides warning messages");
+                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides warning messages.");
             _groupButtons[2] = (ToolStripButton)toolstrip.AddButton(editor.Icons.Info32, () => { OnGroupButtonPressed(2); })
-                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides info messages");
+                                                         .SetAutoCheck(true).LinkTooltip("Shows/hides info messages.");
             UpdateCount();
 
             // Split panel
@@ -495,7 +495,7 @@ namespace FlaxEditor.Windows
             // Pause on Error (we should do it as fast as possible)
             if (newEntry.Group == LogGroup.Error && _pauseOnErrorButton.Checked && Editor.StateMachine.CurrentState == Editor.StateMachine.PlayingState)
             {
-                Debug.Write(LogType.Info, "Pause Play mode on error (toggle this behaviour in the Debug Log panel)");
+                Editor.Log("Pause Play mode on error (toggle this behaviour in the Debug Log panel)");
                 Editor.Simulation.RequestPausePlay();
             }
         }
