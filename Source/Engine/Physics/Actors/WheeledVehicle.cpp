@@ -401,6 +401,9 @@ void WheeledVehicle::DrawPhysicsDebug(RenderView& view)
 
 void WheeledVehicle::OnDebugDrawSelected()
 {
+    // HACK: Cheapo fix ~ Saas
+    int wheelIndex = 0;
+
     // Wheels shapes
     for (const auto& wheel : _wheels)
     {
@@ -445,6 +448,8 @@ void WheeledVehicle::OnDebugDrawSelected()
                 DEBUG_DRAW_TEXT(text, currentPos, WheelInfoColor, 10, 0);
             }
         }
+
+        wheelIndex++;
     }
 
     // Anti roll bars axes
