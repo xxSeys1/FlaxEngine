@@ -136,8 +136,8 @@ float4 GetLighting(float3 viewPos, LightData lightData, GBufferSample gBuffer, f
     }
 
 #if !LIGHTING_NO_DIRECTIONAL
-    // Reduce shadow mapping artifacts
-    shadow.SurfaceShadow *= saturate(NoL * 6.0f - 0.2f) * NoL;
+    // Directional shadowing
+    shadow.SurfaceShadow *= NoL;
 #endif
 
     BRANCH

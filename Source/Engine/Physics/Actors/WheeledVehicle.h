@@ -5,6 +5,7 @@
 #include "Engine/Physics/Actors/RigidBody.h"
 #include "Engine/Physics/Colliders/Collider.h"
 #include "Engine/Scripting/ScriptingObjectReference.h"
+#include "IPhysicsDebug.h"
 #include "Engine/Core/Math/Color.h"
 
 /// <summary>
@@ -12,6 +13,9 @@
 /// </summary>
 /// <seealso cref="RigidBody" />
 API_CLASS(Attributes="ActorContextMenu(\"New/Physics/Wheeled Vehicle\"), ActorToolbox(\"Physics\")") class FLAXENGINE_API WheeledVehicle : public RigidBody
+#if USE_EDITOR
+    , public IPhysicsDebug
+#endif
 {
     friend class PhysicsBackend;
     friend struct ScenePhysX;
@@ -675,13 +679,9 @@ public:
     /// </summary>
     API_FUNCTION() void Setup();
 
-private:
-#if USE_EDITOR
-    void DrawPhysicsDebug(RenderView& view);
-#endif
-
 public:
     // [Vehicle]
+    ImplementPhysicsDebug;
 #if USE_EDITOR
     void OnDebugDrawSelected() override;
 #endif

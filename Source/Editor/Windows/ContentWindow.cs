@@ -1034,6 +1034,21 @@ namespace FlaxEditor.Windows
             _navigateUpButton.Enabled = folder != null && _tree.SelectedNode != _root;
         }
 
+        private void UpdateNavigationBarBounds()
+        {
+            if (_navigationBar != null && _toolStrip != null)
+            {
+                var bottomPrev = _toolStrip.Bottom;
+                _navigationBar.UpdateBounds(_toolStrip);
+                if (bottomPrev != _toolStrip.Bottom)
+                {
+                    // Navigation bar changed toolstrip height
+                    _split.Offsets = new Margin(0, 0, _toolStrip.Bottom, 0);
+                    PerformLayout();
+                }
+            }
+        }
+
         /// <inheritdoc />
         public override void OnInit()
         {
@@ -1218,9 +1233,9 @@ namespace FlaxEditor.Windows
         /// <inheritdoc />
         protected override void PerformLayoutBeforeChildren()
         {
-            base.PerformLayoutBeforeChildren();
+            UpdateNavigationBarBounds();
 
-            _navigationBar?.UpdateBounds(_toolStrip);
+            base.PerformLayoutBeforeChildren();
         }
 
         /// <inheritdoc />
