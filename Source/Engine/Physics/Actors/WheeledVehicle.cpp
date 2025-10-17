@@ -401,9 +401,6 @@ void WheeledVehicle::DrawPhysicsDebug(RenderView& view)
 
 void WheeledVehicle::OnDebugDrawSelected()
 {
-    // HACK: Cheapo fix ~ Saas
-    int wheelIndex = 0;
-
     // Wheels shapes
     int32 wheelIndex = 0;
     for (const auto& wheel : _wheels)
