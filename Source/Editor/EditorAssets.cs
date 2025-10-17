@@ -148,7 +148,6 @@ namespace FlaxEditor
         /// </summary>
         public static string FlaxIconBlueTexture = "Engine/Textures/FlaxIconBlue";
 
-
         /// <summary>
         /// The icon lists used by editor from the SegMDL2 font.
         /// </summary>

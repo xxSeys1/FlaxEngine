@@ -191,7 +191,7 @@ void WheeledVehicle::SetThrottle(float value)
     _throttle = Math::Clamp(value, -1.0f, 1.0f);
 }
 
-float WheeledVehicle::GetThrottle()
+float WheeledVehicle::GetThrottle() const
 {
     return _throttle;
 }
@@ -405,6 +405,7 @@ void WheeledVehicle::OnDebugDrawSelected()
     int wheelIndex = 0;
 
     // Wheels shapes
+    int32 wheelIndex = 0;
     for (const auto& wheel : _wheels)
     {
         if (wheel.Collider && wheel.Collider->GetParent() == this && !wheel.Collider->GetIsTrigger())
@@ -441,22 +442,20 @@ void WheeledVehicle::OnDebugDrawSelected()
             {
                 DEBUG_DRAW_WIRE_SPHERE(BoundingSphere(data.State.TireContactPoint, 5.0f), Color::Green, 0, false);
             }
-
-            if (DisplayWheelInfo)
+            if (ShowDebugDrawWheelNames)
             {
                 const String text = String::Format(TEXT("Index: {}\nCollider: {}"), wheelIndex, wheel.Collider->GetName());
-                DEBUG_DRAW_TEXT(text, currentPos, WheelInfoColor, 10, 0);
+                DEBUG_DRAW_TEXT(text, currentPos, Color::Blue, 10, 0);
             }
         }
-
         wheelIndex++;
     }
 
     // Anti roll bars axes
     const int32 wheelsCount = _wheels.Count();
-    for (int32 i = 0; i < GetAntiRollBars().Count(); i++)
+    for (int32 i = 0; i < _antiRollBars.Count(); i++)
     {
-        const int32 axleIndex = GetAntiRollBars()[i].Axle;
+        const int32 axleIndex = _antiRollBars[i].Axle;
         const int32 leftWheelIndex = axleIndex * 2;
         const int32 rightWheelIndex = leftWheelIndex + 1;
         if (leftWheelIndex >= wheelsCount || rightWheelIndex >= wheelsCount)
@@ -480,8 +479,6 @@ void WheeledVehicle::Serialize(SerializeStream& stream, const void* otherObj)
 
     SERIALIZE_GET_OTHER_OBJ(WheeledVehicle);
 
-    SERIALIZE_MEMBER(DisplayWheelInfo, DisplayWheelInfo);
-    SERIALIZE_MEMBER(WheelInfoColor, WheelInfoColor);
     SERIALIZE_MEMBER(DriveType, _driveType);
     SERIALIZE_MEMBER(Wheels, _wheels);
     SERIALIZE_MEMBER(DriveControl, _driveControl);
@@ -497,8 +494,6 @@ void WheeledVehicle::Deserialize(DeserializeStream& stream, ISerializeModifier* 
 {
     RigidBody::Deserialize(stream, modifier);
 
-    DESERIALIZE(DisplayWheelInfo);
-    DESERIALIZE(WheelInfoColor);
     DESERIALIZE_MEMBER(DriveType, _driveType);
     DESERIALIZE_MEMBER(Wheels, _wheels);
     DESERIALIZE_MEMBER(DriveControl, _driveControl);

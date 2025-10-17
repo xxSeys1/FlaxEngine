@@ -6,7 +6,6 @@
 #include "Engine/Physics/Colliders/Collider.h"
 #include "Engine/Scripting/ScriptingObjectReference.h"
 #include "IPhysicsDebug.h"
-#include "Engine/Core/Math/Color.h"
 
 /// <summary>
 /// Representation of the car vehicle that uses wheels. Built on top of the RigidBody with collider representing its chassis shape and wheels.
@@ -469,17 +468,13 @@ public:
     API_FIELD(Attributes="EditorOrder(1), EditorDisplay(\"Vehicle\")")
     bool UseAnalogSteering = false;
 
+#if USE_EDITOR
     /// <summary>
-    /// If checked, will draw some useful information about the wheels at the position of their colliders.
+    /// If checked, will draw wheel names and indices at the position of their colliders.
     /// </summary>
     API_FIELD(Attributes="EditorOrder(2), EditorDisplay(\"Vehicle\")")
-    bool DisplayWheelInfo = false;
-
-    /// <summary>
-    /// If checked, will draw some useful information about the wheels at the position of their colliders.
-    /// </summary>
-    API_FIELD(Attributes="EditorOrder(3), EditorDisplay(\"Vehicle\"), VisibleIf(\"DisplayWheelInfo\")")
-    Color WheelInfoColor = Color::White;
+    bool ShowDebugDrawWheelNames = false;
+#endif
 
     /// <summary>
     /// Gets the vehicle driving model type.
@@ -499,7 +494,7 @@ public:
     /// <summary>
     /// Gets the vehicle drive control settings.
     /// </summary>
-    API_PROPERTY(Attributes = "EditorOrder(6), EditorDisplay(\"Vehicle\")") DriveControlSettings GetDriveControl() const;
+    API_PROPERTY(Attributes="EditorOrder(6), EditorDisplay(\"Vehicle\")") DriveControlSettings GetDriveControl() const;
 
     /// <summary>
     /// Sets the vehicle drive control settings.
@@ -562,7 +557,7 @@ public:
     /// Get the vehicle throttle. It is the analog accelerator pedal value in range (0,1) where 1 represents the pedal fully pressed and 0 represents the pedal in its rest state.
     /// </summary>
     /// <returns>The vehicle throttle.</returns>
-    API_FUNCTION() float GetThrottle();
+    API_FUNCTION() float GetThrottle() const;
 
     /// <summary>
     /// Sets the input for vehicle steering. Steer is the analog steer value in range (-1,1) where -1 represents the steering wheel at left lock and +1 represents the steering wheel at right lock.

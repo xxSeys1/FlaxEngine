@@ -232,14 +232,14 @@ namespace FlaxEditor.Surface
         }
 
         /// <summary>
-        /// Gets a value indicating whether user is box selecting nodes.
+        /// Gets a value indicating whether user is selecting nodes.
         /// </summary>
-        public bool IsBoxSelecting => _leftMouseDown && !_isMovingSelection && _connectionInstigators.Count == 0;
+        public bool IsSelecting => _leftMouseDown && !_isMovingSelection && _connectionInstigators.Count == 0;
 
         /// <summary>
-        /// Gets a value indicating whether user was previously box selecting nodes.
+        /// Gets a value indicating whether user was previously selecting nodes.
         /// </summary>
-        public bool WasBoxSelecting { get; private set; }
+        public bool WasSelecting { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether user is moving selected nodes.

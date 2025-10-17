@@ -78,6 +78,8 @@ namespace FlaxEditor.GUI.Dialogs
         public ColorSelector(float wheelSize)
         : base(0, 0, wheelSize, wheelSize)
         {
+            AutoFocus = true;
+
             _hsWheelMaterial = FlaxEngine.Content.LoadAsyncInternal<MaterialBase>(EditorAssets.HSWheelMaterial);
             _hsWheelMaterial = _hsWheelMaterial.CreateVirtualInstance();
             _wheelRect = new Rectangle(0, 0, wheelSize, wheelSize);
