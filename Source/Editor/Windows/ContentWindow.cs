@@ -143,6 +143,7 @@ namespace FlaxEditor.Windows
         {
             Title = "Content";
             Icon = editor.Icons.Folder32;
+            var style = Style.Current;
 
             FlaxEditor.Utilities.Utils.SetupCommonInputActions(this);
 
@@ -166,6 +167,8 @@ namespace FlaxEditor.Windows
             _navigationBar = new NavigationBar
             {
                 Parent = _toolStrip,
+                ScrollbarTrackColor = style.Background,
+                ScrollbarThumbColor = style.ForegroundGrey,
             };
 
             // Split panel
@@ -181,7 +184,7 @@ namespace FlaxEditor.Windows
             var headerPanel = new ContainerControl
             {
                 AnchorPreset = AnchorPresets.HorizontalStretchTop,
-                BackgroundColor = Style.Current.Background,
+                BackgroundColor = style.Background,
                 IsScrollable = false,
                 Offsets = new Margin(0, 0, 0, 18 + 6),
             };
