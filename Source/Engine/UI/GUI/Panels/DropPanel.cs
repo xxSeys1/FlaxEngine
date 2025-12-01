@@ -109,13 +109,20 @@ namespace FlaxEngine.GUI
         /// <summary>
         /// Gets or sets a value indicating whether enable drop down icon drawing.
         /// </summary>
-        [EditorOrder(1)]
+        [EditorOrder(2)]
         public bool EnableDropDownIcon { get; set; }
+
+        /// <summary>
+        /// Get or sets a value indicating whether the panel can be opened or closed via the user interacting with the ui.
+        /// Changing the open/ closed state from code or the Properties panel will still work regardless.
+        /// </summary>
+        [EditorOrder(1)]
+        public bool CanOpenClose { get; set; } = true;
 
         /// <summary>
         /// Gets or sets a value indicating whether to enable containment line drawing,
         /// </summary>
-        [EditorOrder(2)]
+        [EditorOrder(3)]
         public bool EnableContainmentLines { get; set; } = false;
 
         /// <summary>
@@ -374,7 +381,7 @@ namespace FlaxEngine.GUI
             }
 
             // Header
-            var color = _mouseOverHeader ? HeaderColorMouseOver : HeaderColor;
+            var color = _mouseOverHeader && CanOpenClose ? HeaderColorMouseOver : HeaderColor;
             if (color.A > 0.0f)
             {
                 Render2D.FillRectangle(new Rectangle(0, 0, Width, HeaderHeight), color);
@@ -517,7 +524,7 @@ namespace FlaxEngine.GUI
             if (button == MouseButton.Left && _mouseButtonLeftDown)
             {
                 _mouseButtonLeftDown = false;
-                if (_mouseOverHeader)
+                if (_mouseOverHeader && CanOpenClose)
                     Toggle();
                 return true;
             }
@@ -547,7 +554,7 @@ namespace FlaxEngine.GUI
             if (button == MouseButton.Left && _mouseButtonLeftDown)
             {
                 _mouseButtonLeftDown = false;
-                if (_mouseOverHeader)
+                if (_mouseOverHeader && CanOpenClose)
                     Toggle();
                 return true;
             }
