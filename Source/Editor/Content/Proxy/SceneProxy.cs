@@ -78,8 +78,8 @@ namespace FlaxEditor.Content
             if (Level.FindScene(id) == null)
             {
                 menu.AddButton("Open (additive)", () => { Editor.Instance.Scene.OpenScene(id, true); });
-                menu.AddButton("Set as First Scene", () => { GameSettings.Load<GameSettings>().FirstScene = new SceneReference(id); });
             }
+            menu.AddButton("Set as First Scene", () => { GameSettings.Load<GameSettings>().FirstScene = new SceneReference(id); });
         }
     }
 }
