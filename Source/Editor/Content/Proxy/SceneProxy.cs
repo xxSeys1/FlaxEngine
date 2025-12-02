@@ -1,6 +1,7 @@
 // Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
+using FlaxEditor.Content.Settings;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Windows;
 using FlaxEngine;
@@ -77,6 +78,7 @@ namespace FlaxEditor.Content
             if (Level.FindScene(id) == null)
             {
                 menu.AddButton("Open (additive)", () => { Editor.Instance.Scene.OpenScene(id, true); });
+                menu.AddButton("Set as First Scene", () => { GameSettings.Load<GameSettings>().FirstScene = new SceneReference(id); });
             }
         }
     }
