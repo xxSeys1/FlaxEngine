@@ -156,7 +156,7 @@ namespace FlaxEditor.Options
         public InputBinding CloseScenes = new InputBinding(KeyboardKeys.None);
 
         [DefaultValue(typeof(InputBinding), "None")]
-        [EditorDisplay("File"), EditorOrder(320)]
+        [EditorDisplay("File", "Open solution in code editor"), EditorOrder(320)]
         public InputBinding OpenScriptsProject = new InputBinding(KeyboardKeys.None);
 
         [DefaultValue(typeof(InputBinding), "None")]
