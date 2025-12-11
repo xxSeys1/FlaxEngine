@@ -76,19 +76,16 @@ ShaderCompilerDX::ShaderCompilerDX(ShaderProfile profile, PlatformType platform,
 {
     IDxcCompiler3* compiler = nullptr;
     IDxcLibrary* library = nullptr;
-    IDxcContainerBuilder* builder = nullptr;
     IDxcContainerReflection* containerReflection = nullptr;
     DxcCreateInstanceProc createInstance = dxcCreateInstanceProc ? (DxcCreateInstanceProc)dxcCreateInstanceProc : &DxcCreateInstance;
     if (FAILED(createInstance(CLSID_DxcCompiler, __uuidof(compiler), reinterpret_cast<void**>(&compiler))) ||
         FAILED(createInstance(CLSID_DxcLibrary, __uuidof(library), reinterpret_cast<void**>(&library))) ||
-        FAILED(createInstance(CLSID_DxcContainerBuilder, __uuidof(builder), reinterpret_cast<void**>(&builder))) ||
         FAILED(createInstance(CLSID_DxcContainerReflection, __uuidof(containerReflection), reinterpret_cast<void**>(&containerReflection))))
     {
         LOG(Error, "DxcCreateInstance failed");
     }
     _compiler = compiler;
     _library = library;
-    _builder = builder;
     _containerReflection = containerReflection;
     static HashSet<void*> PrintVersions;
     if (PrintVersions.Add(createInstance))
@@ -106,13 +103,14 @@ ShaderCompilerDX::ShaderCompilerDX(ShaderProfile profile, PlatformType platform,
 
 ShaderCompilerDX::~ShaderCompilerDX()
 {
-    if (auto compiler = (IDxcCompiler2*)_compiler)
+    auto compiler = (IDxcCompiler2*)_compiler;
+    if (compiler)
         compiler->Release();
-    if (auto library = (IDxcLibrary*)_library)
+    auto library = (IDxcLibrary*)_library;
+    if (library)
         library->Release();
-    if (auto builder = (IDxcContainerBuilder*)_builder)
-        builder->Release();
-    if (auto containerReflection = (IDxcContainerReflection*)_containerReflection)
+    auto containerReflection = (IDxcContainerReflection*)_containerReflection;
+    if (containerReflection)
         containerReflection->Release();
 }
 
@@ -256,7 +254,7 @@ bool ShaderCompilerDX::CompileShader(ShaderFunctionMeta& meta, WritePermutationD
         }
 
         // Get the output
-        ComPtr<IDxcBlob> shaderBuffer;
+        ComPtr<IDxcBlob> shaderBuffer = nullptr;
         if (FAILED(results->GetResult(&shaderBuffer)))
         {
             LOG(Error, "IDxcOperationResult::GetResult failed.");
@@ -459,28 +457,6 @@ bool ShaderCompilerDX::CompileShader(ShaderFunctionMeta& meta, WritePermutationD
                     header.UaDimensions[resDesc.BindPoint + shift] = (byte)resDesc.Dimension; // D3D_SRV_DIMENSION matches D3D12_UAV_DIMENSION
                 }
                 break;
-            }
-        }
-
-        // Strip reflection data
-        if (!options->GenerateDebugData)
-        {
-            if (auto builder = (IDxcContainerBuilder*)_builder)
-            {
-                if (builder->Load(shaderBuffer) == S_OK)
-                {
-                    builder->RemovePart(DXC_PART_PDB);
-                    builder->RemovePart(DXC_PART_REFLECTION_DATA);
-                    ComPtr<IDxcOperationResult> serializeResult;
-                    if (builder->SerializeContainer(&serializeResult) == S_OK)
-                    {
-                        ComPtr<IDxcBlob> optimizedShaderBuffer;
-                        if (SUCCEEDED(serializeResult->GetResult(&optimizedShaderBuffer)))
-                        {
-                            shaderBuffer = optimizedShaderBuffer;
-                        }
-                    }
-                }
             }
         }
 

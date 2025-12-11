@@ -509,7 +509,7 @@ void ProbesRendererService::OnRender(RenderTask* task, GPUContext* context)
 
         // Render frame
         Renderer::Render(_task);
-        context->ResetState();
+        context->ClearState();
 
         // Copy frame to cube face
         {
@@ -568,7 +568,7 @@ void ProbesRendererService::OnRender(RenderTask* task, GPUContext* context)
     }
 
     // Cleanup
-    context->ResetState();
+    context->ClearState();
 
     if (_workStep < 7)
         return; // Continue rendering next frame

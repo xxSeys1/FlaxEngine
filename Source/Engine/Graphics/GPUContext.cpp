@@ -67,7 +67,7 @@ void GPUContext::FrameBegin()
 
 void GPUContext::FrameEnd()
 {
-    ResetState();
+    ClearState();
     FlushState();
 }
 

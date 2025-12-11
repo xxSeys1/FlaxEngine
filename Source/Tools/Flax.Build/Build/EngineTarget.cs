@@ -217,8 +217,7 @@ namespace Flax.Build
             var engineLibraryType = LinkerOutput.SharedLibrary;
             if (buildOptions.Toolchain?.Compiler == TargetCompiler.MSVC)
                 engineLibraryType = LinkerOutput.ImportLibrary; // MSVC links DLL against import library
-            var engineLibraryPath = Utilities.NormalizePath(Path.Combine(buildOptions.OutputFolder, buildOptions.Platform.GetLinkOutputFileName(LibraryName, engineLibraryType)));
-            exeBuildOptions.LinkEnv.InputLibraries.Add(engineLibraryPath);
+            exeBuildOptions.LinkEnv.InputLibraries.Add(Path.Combine(buildOptions.OutputFolder, buildOptions.Platform.GetLinkOutputFileName(LibraryName, engineLibraryType)));
             exeBuildOptions.LinkEnv.InputFiles.AddRange(mainModuleOptions.OutputFiles);
             exeBuildOptions.DependencyFiles.AddRange(mainModuleOptions.DependencyFiles);
             exeBuildOptions.NugetPackageReferences.AddRange(mainModuleOptions.NugetPackageReferences);

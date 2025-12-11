@@ -143,8 +143,6 @@ void CommandQueueDX12::WaitForFence(uint64 fenceValue)
 
 void CommandQueueDX12::WaitForGPU()
 {
-    PROFILE_CPU();
-    ZoneColor(TracyWaitZoneColor);
     const uint64 value = _fence.Signal(this);
     _fence.WaitCPU(value);
 }

@@ -216,21 +216,20 @@ GPUVertexLayout* GPUVertexLayout::Get(const Span<GPUVertexLayout*>& layouts)
     return result;
 }
 
-GPUVertexLayout* GPUVertexLayout::Merge(GPUVertexLayout* base, GPUVertexLayout* reference, bool removeUnused, bool addMissing, int32 missingSlotOverride, bool referenceOrder)
+GPUVertexLayout* GPUVertexLayout::Merge(GPUVertexLayout* base, GPUVertexLayout* reference, bool removeUnused, bool addMissing, int32 missingSlotOverride)
 {
     GPUVertexLayout* result = base ? base : reference;
     if (base && reference && base != reference)
     {
         bool elementsModified = false;
         Elements newElements = base->GetElements();
-        const Elements& refElements = reference->GetElements();
         if (removeUnused)
         {
             for (int32 i = newElements.Count() - 1; i >= 0; i--)
             {
                 bool missing = true;
                 const VertexElement& e = newElements.Get()[i];
-                for (const VertexElement& ee : refElements)
+                for (const VertexElement& ee : reference->GetElements())
                 {
                     if (ee.Type == e.Type)
                     {
@@ -248,7 +247,7 @@ GPUVertexLayout* GPUVertexLayout::Merge(GPUVertexLayout* base, GPUVertexLayout* 
         }
         if (addMissing)
         {
-            for (const VertexElement& e : refElements)
+            for (const VertexElement& e : reference->GetElements())
             {
                 bool missing = true;
                 for (const VertexElement& ee : base->GetElements())
@@ -280,32 +279,6 @@ GPUVertexLayout* GPUVertexLayout::Merge(GPUVertexLayout* base, GPUVertexLayout* 
                     }
                     newElements.Add(ne);
                     elementsModified = true;
-                }
-            }
-        }
-        if (referenceOrder)
-        {
-            for (int32 i = 0, j = 0; i < newElements.Count() && j < refElements.Count(); j++)
-            {
-                if (newElements[i].Type == refElements[j].Type)
-                {
-                    // Elements match so move forward
-                    i++;
-                    continue;
-                }
-
-                // Find reference element in a new list
-                for (int32 k = i + 1; k < newElements.Count(); k++)
-                {
-                    if (newElements[k].Type == refElements[j].Type)
-                    {
-                        // Move matching element to the reference position
-                        VertexElement e = newElements[k];
-                        newElements.RemoveAt(k);
-                        newElements.Insert(i, e);
-                        i++;
-                        break;
-                    }
                 }
             }
         }

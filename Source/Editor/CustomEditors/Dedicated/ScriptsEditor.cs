@@ -640,7 +640,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
             var group = layout.Group("Missing script");
 
             // Add settings button to the group
-            var settingsButton = group.AddHeaderButton("Settings.", 0.0f, FlaxEngine.GUI.Style.Current.Settings);
+            var settingsButton = group.AddSettingsButton();
             settingsButton.Tag = index;
             settingsButton.Clicked += MissingSettingsButtonOnClicked;
         }
@@ -739,8 +739,6 @@ namespace FlaxEditor.CustomEditors.Dedicated
         /// <inheritdoc />
         public override void Initialize(LayoutElementsContainer layout)
         {
-            var _style = FlaxEngine.GUI.Style.Current;
-
             // Area for drag&drop scripts
             var dragArea = layout.CustomContainer<DragAreaControl>();
             dragArea.CustomControl.ScriptsEditor = this;
@@ -907,33 +905,12 @@ namespace FlaxEditor.CustomEditors.Dedicated
                 };
 
                 // Add settings button to the group
-                var settingsButton = group.AddHeaderButton("Settings.", 0.0f, _style.Settings);
+                var settingsButton = group.AddSettingsButton();
                 settingsButton.Tag = script;
                 settingsButton.Clicked += OnSettingsButtonClicked;
 
-                // Add script obsolete icon to the group
-                if (scriptType.HasAttribute(typeof(ObsoleteAttribute), false))
-                {
-                    ObsoleteAttribute attribute = null;
-                    foreach (var e in scriptType.GetAttributes(false))
-                    {
-                        if (e is not ObsoleteAttribute obsoleteAttribute)
-                            continue;
-                        attribute = obsoleteAttribute;
-                        break;
-                    }
-
-                    string tooltip = "Script marked as obsolete." +
-                        (string.IsNullOrEmpty(attribute.Message) ? "" : $"\n{attribute.Message}") +
-                        (string.IsNullOrEmpty(attribute.DiagnosticId) ? "" : $"\n{attribute.DiagnosticId}");
-                    var obsoleteButton = group.AddHeaderButton(tooltip, settingsButton.Width + FlaxEditor.Utilities.Constants.UIMargin, Editor.Instance.Icons.Info32);
-                    obsoleteButton.Color = Color.Orange;
-                }
-
-                group.Panel.HeaderTextMargin = new Margin(scriptDrag.Right - 12, 35, 2, 2);
-
                 // Adjust margin to not overlap with other ui elements in the header
-                group.Panel.HeaderTextMargin = group.Panel.HeaderTextMargin with { Left = scriptDrag.Right - 12, Right = settingsButton.Width * 2f + Utilities.Constants.UIMargin * 2f };
+                group.Panel.HeaderTextMargin = group.Panel.HeaderTextMargin with { Left = scriptDrag.Right - 12, Right = settingsButton.Width + Utilities.Constants.UIMargin };
                 group.Object(values, editor);
                 // Remove drop down arrows and containment lines if no objects in the group
                 if (group.Children.Count == 0)

@@ -47,22 +47,22 @@ namespace FlaxEditor.CustomEditors.Elements
         /// Adds utility settings button to the group header.
         /// </summary>
         /// <returns>The created control.</returns>
-        public Image AddHeaderButton(string tooltipText, float xOffset, SpriteHandle sprite)
+        public Image AddSettingsButton()
         {
             var style = Style.Current;
             var settingsButtonSize = Panel.HeaderHeight;
             Panel.HeaderTextMargin = Panel.HeaderTextMargin with { Right = settingsButtonSize + Utilities.Constants.UIMargin };
 ;           return new Image
             {
-                TooltipText = tooltipText,
+                TooltipText = "Settings",
                 AutoFocus = true,
                 AnchorPreset = AnchorPresets.TopRight,
                 Parent = Panel,
-                Bounds = new Rectangle(Panel.Width - settingsButtonSize - xOffset, 0, settingsButtonSize, settingsButtonSize),
+                Bounds = new Rectangle(Panel.Width - settingsButtonSize, 0, settingsButtonSize, settingsButtonSize),
                 IsScrollable = false,
                 Color = style.ForegroundGrey,
                 Margin = new Margin(1),
-                Brush = new SpriteBrush(sprite),
+                Brush = new SpriteBrush(style.Settings),
             };
         }
     }

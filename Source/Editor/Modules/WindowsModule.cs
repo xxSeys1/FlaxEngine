@@ -967,10 +967,7 @@ namespace FlaxEditor.Modules
                         }
                         Assert.IsNotNull(ctor, $"Restored window of type '{type.FullName}' is missing a constructor accepting parameters Editor and AssetItem");
                         var assetItem = Editor.ContentDatabase.FindAsset(winData.AssetItemID);
-                        var assetType = assetItem.GetType();
-                        var ctor = type.GetConstructor(new Type[] { typeof(Editor), assetType });
                         var win = (AssetEditorWindow)ctor.Invoke(new object[] { Editor.Instance, assetItem });
-
                         win.Show(winData.DockState, winData.DockState != DockState.Float ? winData.DockedTo : null, winData.SelectOnShow, winData.SplitterValue);
                         if (winData.DockState == DockState.Float)
                         {

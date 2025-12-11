@@ -134,7 +134,7 @@ namespace Flax.Build.Graph
         }
 
         /// <summary>
-        /// Performs tasks list sorting based on task dependencies and cost heuristics to improve parallelism of the graph execution.
+        /// Performs tasks list sorting based on task dependencies and cost heuristics to to improve parallelism of the graph execution.
         /// </summary>
         public void SortTasks()
         {
@@ -149,7 +149,12 @@ namespace Flax.Build.Graph
                     {
                         if (FileToProducingTaskMap.TryGetValue(prerequisiteFile, out var prerequisiteTask))
                         {
-                            if (!taskToDependentActionsMap.TryGetValue(prerequisiteTask, out var dependentTasks))
+                            HashSet<Task> dependentTasks;
+                            if (taskToDependentActionsMap.ContainsKey(prerequisiteTask))
+                            {
+                                dependentTasks = taskToDependentActionsMap[prerequisiteTask];
+                            }
+                            else
                             {
                                 dependentTasks = new HashSet<Task>();
                                 taskToDependentActionsMap[prerequisiteTask] = dependentTasks;

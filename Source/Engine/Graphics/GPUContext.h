@@ -618,16 +618,7 @@ public:
     /// <summary>
     /// Clears the context state.
     /// </summary>
-    DEPRECATED("Use ResetState instead")
-    API_FUNCTION() void ClearState()
-    {
-        ResetState();
-    }
-
-    /// <summary>
-    /// Resets the context state.
-    /// </summary>
-    API_FUNCTION() virtual void ResetState() = 0;
+    API_FUNCTION() virtual void ClearState() = 0;
 
     /// <summary>
     /// Flushes the internal cached context state with a command buffer.

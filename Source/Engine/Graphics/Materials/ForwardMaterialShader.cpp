@@ -195,10 +195,5 @@ bool ForwardMaterialShader::Load()
     psDesc.VS = _shader->GetVS("VS_Skinned");
     _cache.DepthSkinned.Init(psDesc);
 
-#if PLATFORM_PS5
-    // Fix shader binding issues on forward shading materials on PS5
-    _drawModes = DrawPass::None;
-#endif
-
     return false;
 }
