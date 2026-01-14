@@ -58,6 +58,7 @@ namespace FlaxEditor.SceneGraph.Actors
                 }
                 SetValue(objects);
             }
+            Presenter.OnModified();
         }
     }
 
