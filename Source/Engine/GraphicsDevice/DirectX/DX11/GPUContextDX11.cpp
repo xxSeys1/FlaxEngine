@@ -132,7 +132,7 @@ void GPUContextDX11::FrameBegin()
     CurrentPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     CurrentStencilRef = 0;
     CurrentBlendFactor = Float4::One;
-    
+
     // Bind dummy vertex buffer (used by missing bindings)
     auto dummyVB = (GPUBufferDX11*)_device->GetDummyVB();
     ID3D11Buffer* dummyVBBuffer = dummyVB->GetBuffer();
@@ -646,10 +646,10 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
         {
             shaderEnabled |= CurrentVS == nullptr;
 #if DX11_CLEAR_SR_ON_STAGE_DISABLE
-			if (CurrentVS && !vs)
-			{
-				_context->VSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
-			}
+            if (CurrentVS && !vs)
+            {
+                _context->VSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
+            }
 #endif
             CurrentVS = vs;
             _context->VSSetShader(vs ? vs->GetBufferHandleDX11() : nullptr, nullptr, 0);
@@ -660,10 +660,10 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
         {
             shaderEnabled |= CurrentHS == nullptr;
 #if DX11_CLEAR_SR_ON_STAGE_DISABLE
-			if (CurrentHS && !hs)
-			{
-				_context->HSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
-			}
+            if (CurrentHS && !hs)
+            {
+                _context->HSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
+            }
 #endif
             CurrentHS = hs;
             _context->HSSetShader(hs ? hs->GetBufferHandleDX11() : nullptr, nullptr, 0);
@@ -672,10 +672,10 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
         {
             shaderEnabled |= CurrentDS == nullptr;
 #if DX11_CLEAR_SR_ON_STAGE_DISABLE
-			if (CurrentDS && !ds)
-			{
-				_context->DSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
-			}
+            if (CurrentDS && !ds)
+            {
+                _context->DSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
+            }
 #endif
             CurrentDS = ds;
             _context->DSSetShader(ds ? ds->GetBufferHandleDX11() : nullptr, nullptr, 0);
@@ -686,10 +686,10 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
         {
             shaderEnabled |= CurrentGS == nullptr;
 #if DX11_CLEAR_SR_ON_STAGE_DISABLE
-			if (CurrentGS && !gs)
-			{
-				_context->GSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
-			}
+            if (CurrentGS && !gs)
+            {
+                _context->GSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
+            }
 #endif
             CurrentGS = gs;
             _context->GSSetShader(gs ? gs->GetBufferHandleDX11() : nullptr, nullptr, 0);
@@ -699,10 +699,10 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
         {
             shaderEnabled |= CurrentPS == nullptr;
 #if DX11_CLEAR_SR_ON_STAGE_DISABLE
-			if (CurrentPS && !ps)
-			{
-				_context->PSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
-			}
+            if (CurrentPS && !ps)
+            {
+                _context->PSSetShaderResources(0, ARRAY_COUNT(EmptySRHandles), EmptySRHandles);
+            }
 #endif
             CurrentPS = ps;
             _context->PSSetShader(ps ? ps->GetBufferHandleDX11() : nullptr, nullptr, 0);
@@ -724,7 +724,7 @@ void GPUContextDX11::SetState(GPUPipelineState* state)
     }
 }
 
-void GPUContextDX11::ClearState()
+void GPUContextDX11::ResetState()
 {
     if (!_context)
         return;

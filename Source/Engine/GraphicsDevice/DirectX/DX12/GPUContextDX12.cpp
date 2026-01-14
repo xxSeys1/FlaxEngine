@@ -300,7 +300,7 @@ void GPUContextDX12::Reset()
     Platform::MemoryClear(&_cbHandles, sizeof(_cbHandles));
     Platform::MemoryClear(&_samplers, sizeof(_samplers));
     _swapChainsUsed = 0;
-    
+
     // Bind dummy vertex buffer (used by missing bindings)
     D3D12_VERTEX_BUFFER_VIEW dummyVBView;
     if (!_device->DummyVB)
@@ -1086,7 +1086,7 @@ void GPUContextDX12::BindVB(const Span<GPUBuffer*>& vertexBuffers, const uint32*
         _commandList->IASetVertexBuffers(0, vertexBuffers.Length(), views);
     }
     if (!vertexLayout)
-         vertexLayout = GPUVertexLayout::Get(vertexBuffers);
+        vertexLayout = GPUVertexLayout::Get(vertexBuffers);
     if (_vertexLayout != vertexLayout)
     {
         _vertexLayout = (GPUVertexLayoutDX12*)vertexLayout;
@@ -1304,7 +1304,7 @@ void GPUContextDX12::SetState(GPUPipelineState* state)
     }
 }
 
-void GPUContextDX12::ClearState()
+void GPUContextDX12::ResetState()
 {
     if (!_commandList)
         return;
