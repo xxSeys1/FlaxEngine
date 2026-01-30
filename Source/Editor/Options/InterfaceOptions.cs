@@ -246,6 +246,13 @@ namespace FlaxEditor.Options
         public bool SeparateValueAndUnit { get; set; }
 
         /// <summary>
+        /// Gets or sets the duration (in seconds) of the open/ close animation of property list groups. Set to 0 to disable the animation.
+        /// </summary>
+        [DefaultValue(0.2f)]
+        [EditorDisplay("Interface"), EditorOrder(312), Limit(0.0f, 1.0f)]
+        public float PropertiesDopdownAnimationTime { get; set; }
+
+        /// <summary>
         /// Gets or sets the option to auto size the Properties panel splitter based on the longest property name. Editor restart recommended.
         /// </summary>
         [DefaultValue(false)]
