@@ -56,10 +56,10 @@ namespace FlaxEditor.Surface
         : base(id, context, nodeArch, groupArch)
         {
             _sizeValueIndex = 2; // Index of the Size stored in Values array
-            _sizeMin = new Float2(140.0f, Constants.NodeHeaderSize);
+            _sizeMin = new Float2(140.0f, Constants.NodeHeaderHeight);
             _renameTextBox = new TextBox(false, 0, 0, Width)
             {
-                Height = Constants.NodeHeaderSize,
+                Height = Constants.NodeHeaderHeight,
                 Visible = false,
                 Parent = this,
                 EndEditOnClick = false, // We have to handle this ourselves, otherwise the textbox instantly loses focus when double-clicking the header
@@ -124,7 +124,7 @@ namespace FlaxEditor.Surface
         {
             base.UpdateRectangles();
 
-            const float headerSize = Constants.NodeHeaderSize;
+            const float headerSize = Constants.NodeHeaderHeight;
             const float buttonMargin = Constants.NodeCloseButtonMargin;
             const float buttonSize = Constants.NodeCloseButtonSize;
             _headerRect = new Rectangle(0, 0, Width, headerSize);
