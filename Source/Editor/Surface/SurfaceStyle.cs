@@ -222,7 +222,7 @@ namespace FlaxEditor.Surface
 
         private static void DefaultDrawBox(Elements.Box box)
         {
-            var rect = new Rectangle(0.0f, box.Height * 0.5f - Constants.BoxSize * 0.5f, new Float2(Constants.BoxSize));
+            var rect = new Rectangle(box.Width * 0.5f - Constants.BoxSize * 0.5f, box.Height * 0.5f - Constants.BoxSize * 0.5f, new Float2(Constants.BoxSize));
 
             // Size culling
             const float minBoxSize = 5.0f;
@@ -244,6 +244,10 @@ namespace FlaxEditor.Surface
             else
                 icon = hasConnections ? style.Icons.BoxClose : style.Icons.BoxOpen;
             color *= box.ConnectionsHighlightIntensity + 1;
+            
+            var features = Render2D.Features;
+            Render2D.Features = features & ~Render2D.RenderingFeatures.VertexSnapping;
+            
             Render2D.DrawSprite(icon, rect, color);
 
             // Draw connected hint with color from connected output box
@@ -264,6 +268,8 @@ namespace FlaxEditor.Surface
                 Color selectionColor = FlaxEngine.GUI.Style.Current.BorderSelected.RGBMultiplied(1.0f + outlineAlpha * 0.4f);
                 Render2D.DrawSprite(icon, outlineRect, selectionColor.AlphaMultiplied(0.4f));
             }
+
+            Render2D.Features = features;
         }
 
         /// <summary>
@@ -329,13 +335,11 @@ namespace FlaxEditor.Surface
             {
                 var dir = sub / length;
                 var arrowRect = new Rectangle(0, 0, 16.0f, 16.0f);
-                float rotation = Float2.Dot(dir, Float2.UnitY);
-                if (endPos.X < startPos.X)
-                    rotation = 2 - rotation;
+                float rotation = Mathf.Atan2(dir.Y, dir.X);
                 var sprite = Editor.Instance.Icons.VisjectArrowClosed32;
                 var arrowTransform =
                     Matrix3x3.Translation2D(-6.5f, -8) *
-                    Matrix3x3.RotationZ(rotation * Mathf.PiOverTwo) * 
+                    Matrix3x3.RotationZ(rotation) * 
                     Matrix3x3.Translation2D(endPos - dir * 8);
 
                 Render2D.PushTransform(ref arrowTransform);

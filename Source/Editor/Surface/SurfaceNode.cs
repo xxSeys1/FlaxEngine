@@ -159,7 +159,7 @@ namespace FlaxEditor.Surface
         public virtual string ContentSearchText => null;
 
         /// <summary>
-        /// Gets the color of the footer of the node.
+        /// Gets the color of the header of the node.
         /// </summary>
         protected virtual Color ArchetypeColor => GroupArchetype.Color;
 
@@ -199,7 +199,7 @@ namespace FlaxEditor.Surface
             {
                 if (Elements[i] is OutputBox box)
                 {
-                    box.Location = box.Archetype.Position + new Float2(width, 0);
+                    box.Location = box.Archetype.Position + new Float2(width - Constants.NodeMarginX, 0);
                 }
             }
 
@@ -343,6 +343,8 @@ namespace FlaxEditor.Surface
 
             if (!Archetype.UseFixedSize)
                 ResizeAuto();
+            else
+                Resize(Archetype.Size.X, Archetype.Size.Y);
         }
 
         /// <summary>
@@ -940,6 +942,8 @@ namespace FlaxEditor.Surface
 
             if (!Archetype.UseFixedSize)
                 ResizeAuto();
+            else
+                Resize(Archetype.Size.X, Archetype.Size.Y);
         }
 
         /// <inheritdoc />
@@ -980,6 +984,8 @@ namespace FlaxEditor.Surface
 
             if (!Archetype.UseFixedSize)
                 ResizeAuto();
+            else
+                Resize(Archetype.Size.X, Archetype.Size.Y);
         }
 
         /// <summary>
@@ -1017,6 +1023,8 @@ namespace FlaxEditor.Surface
 
             if (!Archetype.UseFixedSize)
                 ResizeAuto();
+            else
+                Resize(Archetype.Size.X, Archetype.Size.Y);
         }
 
         internal void SetIsDuringValuesEditing(bool value)
@@ -1051,6 +1059,8 @@ namespace FlaxEditor.Surface
             UpdateBoxesTypes();
             if (!Archetype.UseFixedSize)
                 ResizeAuto();
+            else
+                Resize(Archetype.Size.X, Archetype.Size.Y);
         }
 
         /// <inheritdoc />
@@ -1061,7 +1071,7 @@ namespace FlaxEditor.Surface
             const float closeButtonMargin = Constants.NodeCloseButtonMargin;
             const float closeButtonSize = Constants.NodeCloseButtonSize;
             _headerRect = new Rectangle(0, 0, Width, headerSize);
-            _headerTextRect = _headerRect with { Width = _headerRect.Width - 5f, X = _headerRect.X + 5f }; 
+            _headerTextRect = _headerRect with { X = 5f, Width = Width - closeButtonSize - closeButtonMargin * 4f };
             _closeButtonRect = new Rectangle(Width - closeButtonSize - closeButtonMargin, closeButtonMargin, closeButtonSize, closeButtonSize);
             _footerRect = new Rectangle(0, Height - footerSize, Width, footerSize);
         }
