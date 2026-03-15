@@ -242,6 +242,17 @@ namespace FlaxEditor.Surface
                     rightWidth = Mathf.Max(rightWidth, boxLabelFont.MeasureText(outputBox.Text).X + 20);
                     rightHeight = Mathf.Max(rightHeight, outputBox.Archetype.Position.Y - Constants.NodeMarginY - Constants.NodeHeaderHeight + 20.0f);
                 }
+                // Elements (Float-, int-, uint- value boxes, asset pickers, etc.)
+                else if (child is ISurfaceNodeElement surfaceElement)
+                {
+                    leftWidth = Mathf.Max(leftWidth, surfaceElement.Archetype.Size.X + 8f);
+                    leftHeight = Mathf.Max(leftHeight, surfaceElement.Archetype.Size.Y + 8f);
+                }
+                else if (child is SurfaceNodeElementControl elementControl)
+                {
+                    leftWidth = Mathf.Max(leftWidth, elementControl.Width + 8f);
+                    leftHeight = Mathf.Max(leftHeight, elementControl.Height + 8f);
+                }
                 // Other controls in the node
                 else if (child is Control control)
                 {
@@ -454,7 +465,7 @@ namespace FlaxEditor.Surface
         private static readonly List<SurfaceNode> UpdateStack = new List<SurfaceNode>();
 
         /// <summary>
-        /// Updates dependant/independent boxes types.
+        /// Updates dependent/independent boxes types.
         /// </summary>
         public void UpdateBoxesTypes()
         {
@@ -797,6 +808,24 @@ namespace FlaxEditor.Surface
         }
 
         /// <summary>
+        /// Draws the close button inside of the <paramref name="rect"/>.
+        /// </summary>
+        /// <param name="rect">The rectangle to draw the close button in.</param>
+        /// <param name="color">The color of the close button.</param>
+        public void DrawCloseButton(Rectangle rect, Color color)
+        {
+            // Disable vertex snapping to reduce artefacts at the line ends
+            var features = Render2D.Features;
+            Render2D.Features = features & ~Render2D.RenderingFeatures.VertexSnapping;
+
+            rect.Expand(-2f); // Don't overshoot the rectangle because of the thickness
+            Render2D.DrawLine(rect.TopLeft, rect.BottomRight, color, 2f);
+            Render2D.DrawLine(rect.BottomLeft, rect.TopRight, color, 2f);
+
+            Render2D.Features = features;
+        }
+
+        /// <summary>
         /// Draws all the connections between surface objects related to this node.
         /// </summary>
         /// <param name="mousePosition">The current mouse position (in surface-space).</param>
@@ -1113,7 +1142,7 @@ namespace FlaxEditor.Surface
             if ((Archetype.Flags & NodeFlags.NoCloseButton) == 0 && Surface.CanEdit)
             {
                 bool highlightClose = _closeButtonRect.Contains(_mousePosition) && !Surface.IsConnecting && !Surface.IsSelecting;
-                Render2D.DrawSprite(style.Cross, _closeButtonRect, highlightClose ? style.Foreground : style.ForegroundGrey);
+                DrawCloseButton(_closeButtonRect, highlightClose ? style.Foreground : style.ForegroundGrey);
             }
 
             // Footer
