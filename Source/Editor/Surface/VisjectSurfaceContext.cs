@@ -256,9 +256,10 @@ namespace FlaxEditor.Surface
         public SurfaceParameter GetParameter(Guid id)
         {
             SurfaceParameter result = null;
-            for (int i = 0; i < Parameters.Count; i++)
+            var parameters = Parameters;
+            for (int i = 0; i < parameters.Count; i++)
             {
-                var parameter = Parameters[i];
+                var parameter = parameters[i];
                 if (parameter.ID == id)
                 {
                     result = parameter;
@@ -276,9 +277,10 @@ namespace FlaxEditor.Surface
         public SurfaceParameter GetParameter(string name)
         {
             SurfaceParameter result = null;
-            for (int i = 0; i < Parameters.Count; i++)
+            var parameters = Parameters;
+            for (int i = 0; i < parameters.Count; i++)
             {
-                var parameter = Parameters[i];
+                var parameter = parameters[i];
                 if (parameter.Name == name)
                 {
                     result = parameter;
