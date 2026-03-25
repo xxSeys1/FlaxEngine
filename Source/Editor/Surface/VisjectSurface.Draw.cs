@@ -278,7 +278,7 @@ namespace FlaxEditor.Surface
 
             Rectangle startRect = new Rectangle(_rightMouseDownPos - 6f, new Float2(12f));
             Rectangle endRect = new Rectangle(_mousePos - 6f, new Float2(12f));
-            
+
             // Start and end shadows/ outlines
             Render2D.FillRectangle(startRect.MakeExpanded(2.5f), Color.Black);
             Render2D.FillRectangle(endRect.MakeExpanded(2.5f), Color.Black);
