@@ -53,16 +53,13 @@ namespace FlaxEditor.Modules
 
             public Guid AssetItemID;
 
-            public WindowRestoreData(Type type)
+            // Constructor, to allow for default values
+            public WindowRestoreData()
             {
-                AssemblyName = type.Assembly.GetName().Name;
-                TypeName = type.FullName;
             }
         }
 
         private readonly List<WindowRestoreData> _restoreWindows = new List<WindowRestoreData>();
-
-        private readonly HashSet<DockWindow> _handledRestoreWindows = new HashSet<DockWindow>();
 
         /// <summary>
         /// The main editor window.
@@ -816,14 +813,16 @@ namespace FlaxEditor.Modules
             Level.SceneSaving += OnSceneSaving;
             Level.SceneUnloaded += OnSceneUnloaded;
             Level.SceneUnloading += OnSceneUnloading;
-            Editor.ContentDatabase.WorkspaceRebuilding += OnWorkspaceRebuilding;
             Editor.ContentDatabase.WorkspaceRebuilt += OnWorkspaceRebuilt;
             Editor.StateMachine.StateChanged += OnEditorStateChanged;
         }
 
         internal void AddToRestore(AssetEditorWindow win)
         {
-            AddToRestore(win, GetRestoreData(win));
+            AddToRestore(win, win.GetType(), new WindowRestoreData
+            {
+                AssetItemID = win.Item.ID,
+            });
         }
 
         internal void AddToRestore(CustomEditorWindow win)
@@ -834,116 +833,59 @@ namespace FlaxEditor.Modules
             if (constructor == null || type.IsGenericType)
                 return;
 
-            AddToRestore(win.Window, new WindowRestoreData(type));
+            AddToRestore(win.Window, type, new WindowRestoreData());
         }
 
-        private WindowRestoreData GetRestoreData(DockWindow win)
+        private void AddToRestore(EditorWindow win, Type type, WindowRestoreData winData)
         {
-            var type = win.GetType();
-            var restoreData = new WindowRestoreData(type);
-            if (win is AssetEditorWindow assetEditor)
-            {
-                return restoreData with
-                {
-                    AssetItemID = assetEditor.Item.ID,
-                };
-            }
-            return restoreData;
-        }
-
-        private bool CanRestoreWindow(DockWindow win)
-        {
-            var type = win.GetType();
-            if (type.IsAssignableTo(typeof(AssetEditorWindow)) ||
-                type.IsAssignableTo(typeof(CustomEditorWindow.Win)))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private void AddToRestore(EditorWindow win, WindowRestoreData winData)
-        {
+            // Ensure that this window is only selected following recompilation
+            // if it was the active tab in its dock panel. Otherwise, there is a
+            // risk of interrupting the user's workflow by potentially selecting
+            // background tabs.
+            var window = win.RootWindow?.Window;
             var panel = win.ParentDockPanel;
-            if (panel.TabsCount > 1)
+            winData.SelectOnShow = panel.SelectedTab == win;
+            winData.DockedTabIndex = 0;
+            if (panel is FloatWindowDockPanel && window != null && panel.TabsCount == 1)
             {
-                // Handle all restorable tabs at once, the order when the individual tabs request to be restored
-                // is based on the order of when the windows were created, causing the tab index to change when
-                // a single tab is closed.
-
-                // The selected tab should not float if the panel has non-restorable tabs
-                bool floatSelectedTab = true;
+                winData.DockState = DockState.Float;
+                winData.FloatPosition = window.Position;
+                winData.FloatSize = window.ClientSize;
+                winData.Maximize = window.IsMaximized;
+                winData.Minimize = window.IsMinimized;
+                winData.DockedTo = panel;
+            }
+            else
+            {
                 for (int i = 0; i < panel.Tabs.Count; i++)
                 {
-                    if (!CanRestoreWindow(panel.Tabs[i]))
+                    if (panel.Tabs[i] == win)
                     {
-                        floatSelectedTab = false;
+                        winData.DockedTabIndex = i;
                         break;
                     }
                 }
-
-                // The floating window tab needs to exist before other tabs
-                if (floatSelectedTab)
-                    AddFloatWindowToRestore(panel, panel.SelectedTab, GetRestoreData(panel.SelectedTab));
-
-                // Add the remaining tabs to be restored
-                for (int i = 0; i < panel.Tabs.Count; i++)
+                if (panel.TabsCount > 1)
                 {
-                    if (floatSelectedTab && i == panel.SelectedTabIndex)
-                        continue;
-                    if (!CanRestoreWindow(panel.Tabs[i]))
-                        continue;
-
-                    AddToRestore(panel.Tabs[i], GetRestoreData(panel.Tabs[i]) with
-                    {
-                        SelectOnShow = panel.SelectedTab == panel.Tabs[i],
-                        DockedTabIndex = i,
-                        DockState = DockState.DockFill,
-                        DockedTo = panel,
-                    });
+                    winData.DockState = DockState.DockFill;
+                    winData.DockedTo = panel;
+                }
+                else
+                {
+                    winData.DockState = panel.TryGetDockState(out var splitterValue);
+                    winData.DockedTo = panel.ParentDockPanel;
+                    winData.SplitterValue = splitterValue;
                 }
             }
-            else if (panel is FloatWindowDockPanel)
-                AddFloatWindowToRestore(panel, win, winData);
-        }
-
-        private void AddFloatWindowToRestore(DockPanel panel, DockWindow win, WindowRestoreData winData)
-        {
-            var rootWindow = win.RootWindow?.Window;
-            var dockState = panel.TryGetDockState(out var splitterValue);
-            AddToRestore(win, winData with
-            {
-                SelectOnShow = panel.SelectedTab == win,
-                DockedTabIndex = panel.GetTabIndex(win),
-                DockState = dockState,
-                FloatPosition = rootWindow.Position,
-                FloatSize = rootWindow.ClientSize,
-                Maximize = rootWindow.IsMaximized,
-                Minimize = rootWindow.IsMinimized,
-                DockedTo = panel,
-                SplitterValue = splitterValue,
-            });
-        }
-
-        private void AddToRestore(DockWindow win, WindowRestoreData winData)
-        {
-            if (_handledRestoreWindows.Contains(win))
-                return;
-
+            winData.AssemblyName = type.Assembly.GetName().Name;
+            winData.TypeName = type.FullName;
             _restoreWindows.Add(winData);
-            _handledRestoreWindows.Add(win);
-        }
-
-        private void OnWorkspaceRebuilding()
-        {
-            // Try not to root down these references during scripts reload
-            _handledRestoreWindows.Clear();
         }
 
         private void OnWorkspaceRebuilt()
         {
-            List<(AssetEditorWindow win, int ind)> tabsToReorder = new();
-            for (int i = 0; i < _restoreWindows.Count; i++)
+            // Go in reverse order to create floating Prefab windows first before docked windows
+            for (int i = _restoreWindows.Count - 1; i >= 0; i--)
             {
                 var winData = _restoreWindows[i];
 
@@ -959,18 +901,7 @@ namespace FlaxEditor.Modules
 
                     if (type.IsAssignableTo(typeof(AssetEditorWindow)))
                     {
-                        ConstructorInfo ctor = null;
-                        var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
-                        for (int j = 0; j < ctors.Length; j++)
-                        {
-                            var parameterTypes = ctors[j].GetParameterTypes();
-                            if (parameterTypes.Length == 2 && parameterTypes[0].IsAssignableTo(typeof(Editor)) && parameterTypes[1].IsAssignableTo(typeof(AssetItem)))
-                            {
-                                ctor = ctors[j];
-                                break;
-                            }
-                        }
-                        Assert.IsNotNull(ctor, $"Restored window of type '{type.FullName}' is missing a constructor accepting parameters Editor and AssetItem");
+                        var ctor = type.GetConstructor(new Type[] { typeof(Editor), typeof(AssetItem) });
                         var assetItem = Editor.ContentDatabase.FindAsset(winData.AssetItemID);
                         var win = (AssetEditorWindow)ctor.Invoke(new object[] { Editor.Instance, assetItem });
                         win.Show(winData.DockState, winData.DockState != DockState.Float ? winData.DockedTo : null, winData.SelectOnShow, winData.SplitterValue);
@@ -998,8 +929,27 @@ namespace FlaxEditor.Modules
                                     otherData.DockedTo = win.ParentDockPanel;
                             }
                         }
-                        if (winData.DockedTo != null)
-                            tabsToReorder.Add((win, i));
+                        var panel = win.ParentDockPanel;
+                        int currentTabIndex = 0;
+                        for (int pi = 0; pi < panel.TabsCount; pi++)
+                        {
+                            if (panel.Tabs[pi] == win)
+                            {
+                                currentTabIndex = pi;
+                                break;
+                            }
+                        }
+                        while (currentTabIndex > winData.DockedTabIndex)
+                        {
+                            win.ParentDockPanel.MoveTabLeft(currentTabIndex);
+                            currentTabIndex--;
+                        }
+                        while (currentTabIndex < winData.DockedTabIndex)
+                        {
+                            win.ParentDockPanel.MoveTabRight(currentTabIndex);
+                            currentTabIndex++;
+                        }
+                        panel.PerformLayout(true);
                     }
                     else
                     {
@@ -1028,29 +978,6 @@ namespace FlaxEditor.Modules
                 {
                     Editor.LogWarning(ex);
                     Editor.LogWarning(string.Format("Failed to restore window {0} (assembly: {1})", winData.TypeName, winData.AssemblyName));
-                }
-            }
-
-            // Reorder the tabs to correct position, this needs to be done multiple times
-            // as moving tabs might nudge previously restored tabs to wrong position.
-            for (int repeat = 0; repeat < 2; repeat++)
-            {
-                foreach (var (win, i) in tabsToReorder)
-                {
-                    var winData = _restoreWindows[i];
-                    var panel = win.ParentDockPanel;
-                    int currentTabIndex = panel.GetTabIndex(win);
-                    while (currentTabIndex > winData.DockedTabIndex)
-                    {
-                        panel.MoveTabLeft(currentTabIndex);
-                        currentTabIndex--;
-                    }
-                    while (currentTabIndex < winData.DockedTabIndex)
-                    {
-                        panel.MoveTabRight(currentTabIndex);
-                        currentTabIndex++;
-                    }
-                    panel.PerformLayout(true); // Toolbar requires updating the layout
                 }
             }
 
@@ -1215,7 +1142,6 @@ namespace FlaxEditor.Modules
             Level.SceneSaving -= OnSceneSaving;
             Level.SceneUnloaded -= OnSceneUnloaded;
             Level.SceneUnloading -= OnSceneUnloading;
-            Editor.ContentDatabase.WorkspaceRebuilding -= OnWorkspaceRebuilding;
             Editor.ContentDatabase.WorkspaceRebuilt -= OnWorkspaceRebuilt;
             Editor.StateMachine.StateChanged -= OnEditorStateChanged;
 
