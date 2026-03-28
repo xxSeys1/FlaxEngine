@@ -317,7 +317,7 @@ namespace FlaxEditor.Surface.Archetypes
                 {
                     pos += new Float2(65, 0);
                     size = new Float2(160, 185);
-                    _sizeMin = new Float2(240, 185);
+                    sizeMin = new Float2(240, 185);
                 }
                 else
                 {
