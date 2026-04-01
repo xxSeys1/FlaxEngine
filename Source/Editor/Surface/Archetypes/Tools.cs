@@ -1465,8 +1465,8 @@ namespace FlaxEditor.Surface.Archetypes
                 TypeID = 6,
                 Title = "Panner",
                 Description = "Animates UVs over time",
-                Flags = NodeFlags.MaterialGraph,
-                Size = new Float2(170, 80),
+                Flags = NodeFlags.MaterialGraph | NodeFlags.FixedSize,
+                Size = new Float2(170, 96),
                 DefaultValues = new object[]
                 {
                     false
@@ -1476,7 +1476,7 @@ namespace FlaxEditor.Surface.Archetypes
                     NodeElementArchetype.Factory.Input(0, "UV", true, typeof(Float2), 0),
                     NodeElementArchetype.Factory.Input(1, "Time", true, typeof(float), 1),
                     NodeElementArchetype.Factory.Input(2, "Speed", true, typeof(Float2), 2),
-                    NodeElementArchetype.Factory.Text(18, Surface.Constants.LayoutOffsetY * 3 + 5, "Fractional Part"),
+                    NodeElementArchetype.Factory.Text(20, Surface.Constants.LayoutOffsetY * 3 + 5, "Fractional Part"),
                     NodeElementArchetype.Factory.Bool(0, Surface.Constants.LayoutOffsetY * 3 + 5, 0),
                     NodeElementArchetype.Factory.Output(0, "", typeof(Float2), 3)
                 }
@@ -1526,9 +1526,8 @@ namespace FlaxEditor.Surface.Archetypes
                 Title = "Color Gradient",
                 Create = (id, context, arch, groupArch) => new ColorGradientNode(id, context, arch, groupArch),
                 Description = "Linear color gradient sampler",
-                Flags = NodeFlags.AllGraphs,
+                Flags = NodeFlags.AllGraphs | NodeFlags.FixedSize,
                 Size = new Float2(400, 150.0f),
-                UseFixedSize = true,
                 DefaultValues = new object[]
                 {
                     // Stops count
@@ -1846,9 +1845,8 @@ namespace FlaxEditor.Surface.Archetypes
                 Title = "Reroute",
                 Create = (id, context, arch, groupArch) => new RerouteNode(id, context, arch, groupArch),
                 Description = "Reroute a connection.",
-                Flags = NodeFlags.NoCloseButton | NodeFlags.NoSpawnViaGUI | NodeFlags.AllGraphs,
+                Flags = NodeFlags.NoCloseButton | NodeFlags.NoSpawnViaGUI | NodeFlags.AllGraphs | NodeFlags.FixedSize,
                 Size = RerouteNode.DefaultSize,
-                UseFixedSize = true,
                 ConnectionsHints = ConnectionsHint.All,
                 IndependentBoxes = new int[] { 0 },
                 DependentBoxes = new int[] { 1 },

@@ -376,10 +376,10 @@ namespace FlaxEditor.Surface.Elements
             Assert.AreEqual(r1, r2);
 
             // Update
-            ConnectionTick();
-            box.ConnectionTick();
             OnConnectionsChanged();
             box.OnConnectionsChanged();
+            ConnectionTick();
+            box.ConnectionTick();
             Surface?.OnNodesDisconnected(this, box);
         }
 
@@ -403,10 +403,10 @@ namespace FlaxEditor.Surface.Elements
             Assert.IsTrue(AreConnected(box));
 
             // Update
-            ConnectionTick();
-            box.ConnectionTick();
             OnConnectionsChanged();
             box.OnConnectionsChanged();
+            ConnectionTick();
+            box.ConnectionTick();
             Surface?.OnNodesConnected(this, box);
         }
 
