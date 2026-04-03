@@ -473,6 +473,7 @@ bool ShadowsPass::Init()
     _psShadowPointInside.CreatePipelineStates();
     _psShadowSpot.CreatePipelineStates();
     _psShadowSpotInside.CreatePipelineStates();
+    _depthBounds = GPUDevice::Instance->Limits.HasDepthBounds && GPUDevice::Instance->Limits.HasReadOnlyDepth;
 
     // Load assets
     _shader = Content::LoadAsyncInternal<Shader>(TEXT("Shaders/Shadows"));
@@ -518,6 +519,8 @@ bool ShadowsPass::setupResources()
     {
         psDesc = GPUPipelineState::Description::DefaultFullscreenTriangle;
         psDesc.BlendMode.RenderTargetWriteMask = BlendingMode::ColorWrite::RG;
+        psDesc.DepthWriteEnable = false;
+        psDesc.DepthEnable = psDesc.DepthBoundsEnable = _depthBounds;
         if (_psShadowDir.Create(psDesc, shader, "PS_DirLight"))
             return true;
     }
@@ -527,6 +530,7 @@ bool ShadowsPass::setupResources()
         psDesc.BlendMode.RenderTargetWriteMask = BlendingMode::ColorWrite::RG;
         psDesc.VS = shader->GetVS("VS_Model");
         psDesc.DepthEnable = true;
+        psDesc.DepthBoundsEnable = _depthBounds;
         psDesc.CullMode = CullMode::Normal;
         if (_psShadowPoint.Create(psDesc, shader, "PS_PointLight"))
             return true;
@@ -541,6 +545,7 @@ bool ShadowsPass::setupResources()
         psDesc.BlendMode.RenderTargetWriteMask = BlendingMode::ColorWrite::RG;
         psDesc.VS = shader->GetVS("VS_Model");
         psDesc.DepthEnable = true;
+        psDesc.DepthBoundsEnable = _depthBounds;
         psDesc.CullMode = CullMode::Normal;
         if (_psShadowSpot.Create(psDesc, shader, "PS_SpotLight"))
             return true;
@@ -776,7 +781,7 @@ void ShadowsPass::SetupLight(ShadowsCustomBuffer& shadows, RenderContext& render
     // Disable cascades blending when baking lightmaps
     if (IsRunningRadiancePass)
         atlasLight.BlendCSM = false;
-#elif PLATFORM_SWITCH || PLATFORM_IOS || PLATFORM_ANDROID
+#elif PLATFORM_WEB || PLATFORM_SWITCH || PLATFORM_IOS || PLATFORM_ANDROID
     // Disable cascades blending on low-end platforms
     atlasLight.BlendCSM = false;
 #endif
@@ -1170,6 +1175,10 @@ void ShadowsPass::SetupShadows(RenderContext& renderContext, RenderContextBatch&
             LOG(Fatal, "Failed to setup shadow map of size {0}x{1} and format {2}", desc.Width, desc.Height, ScriptingEnum::ToString(desc.Format));
             return;
         }
+#if PLATFORM_WEB
+        // Hack to fix WebGPU limitation that requires to specify different sampler type manually to sample depth texture
+        SetWebGPUTextureViewSampler(shadows.ShadowMapAtlas->View(), GPU_WEBGPU_SAMPLER_TYPE_DEPTH);
+#endif
         shadows.ClearShadowMapAtlas = true;
         shadows.Resolution = atlasResolution;
         shadows.ViewOrigin = renderContext.View.Origin;
@@ -1649,7 +1658,18 @@ void ShadowsPass::RenderShadowMask(RenderContextBatch& renderContextBatch, Rende
     context->BindSR(5, shadows.ShadowsBufferView);
     context->BindSR(6, shadows.ShadowMapAtlas);
     const int32 permutationIndex = shadowQuality + (sperLight.ContactShadowsLength > ZeroTolerance ? 4 : 0);
-    context->SetRenderTarget(shadowMask);
+    GPUTexture* depthBuffer = renderContext.Buffers->DepthBuffer;
+    const bool depthBufferReadOnly = EnumHasAnyFlags(depthBuffer->Flags(), GPUTextureFlags::ReadOnlyDepthView);
+    context->SetRenderTarget(depthBufferReadOnly ? depthBuffer->ViewReadOnlyDepth() : nullptr, shadowMask);
+    if (_depthBounds)
+    {
+        Float2 minMaxDepth;
+        if (light.IsPointLight || light.IsSpotLight)
+            minMaxDepth = RenderTools::GetDepthBounds(view, BoundingSphere(light.Position, ((RenderLocalLightData&)light).Radius));
+        else //if (light.IsDirectionalLight)
+            minMaxDepth = Float2(0.0f, RenderTools::DepthBoundMaxBackground);
+        context->SetDepthBounds(minMaxDepth.X, minMaxDepth.Y);
+    }
     if (light.IsPointLight)
     {
         context->SetState((isViewInside ? _psShadowPointInside : _psShadowPoint).Get(permutationIndex));

@@ -32,7 +32,7 @@ API_ENUM() enum class GPUResourceType
     PipelineState,
     // GPU binding descriptor
     Descriptor,
-    // GPU timer query
+    // GPU timer or occlusion query
     Query,
     // GPU texture sampler
     Sampler,
@@ -119,6 +119,10 @@ protected:
     /// Releases GPU resource data (implementation).
     /// </summary>
     virtual void OnReleaseGPU();
+
+#if !BUILD_RELEASE
+    virtual void OnRenamed();
+#endif
 
 public:
     // [ScriptingObject]

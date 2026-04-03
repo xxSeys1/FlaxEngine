@@ -112,15 +112,13 @@ bool GPUPipelineState::Init(const Description& desc)
 #endif
 
     // Cache shader stages usage flags for pipeline state
-    _meta.InstructionsCount = 0;
-    _meta.UsedCBsMask = 0;
-    _meta.UsedSRsMask = 0;
-    _meta.UsedUAsMask = 0;
+    Platform::MemoryClear(&_meta, sizeof(_meta));
 #define CHECK_STAGE(stage) \
 	if (desc.stage) { \
 		_meta.UsedCBsMask |= desc.stage->GetBindings().UsedCBsMask; \
 		_meta.UsedSRsMask |= desc.stage->GetBindings().UsedSRsMask; \
 		_meta.UsedUAsMask |= desc.stage->GetBindings().UsedUAsMask; \
+		_meta.UsedSamplersMask |= desc.stage->GetBindings().UsedSamplersMask; \
 	}
     CHECK_STAGE(VS);
     CHECK_STAGE(HS);
@@ -160,6 +158,7 @@ GPUPipelineState::Description GPUPipelineState::Description::Default =
     true, // DepthEnable
     true, // DepthWriteEnable
     true, // DepthClipEnable
+    false, // DepthBoundsEnable
     ComparisonFunc::Less, // DepthFunc
     false, // StencilEnable
     0xff, // StencilReadMask
@@ -184,6 +183,7 @@ GPUPipelineState::Description GPUPipelineState::Description::DefaultNoDepth =
     false, // DepthEnable
     false, // DepthWriteEnable
     false, // DepthClipEnable
+    false, // DepthBoundsEnable
     ComparisonFunc::Less, // DepthFunc
     false, // StencilEnable
     0xff, // StencilReadMask
@@ -208,6 +208,7 @@ GPUPipelineState::Description GPUPipelineState::Description::DefaultFullscreenTr
     false, // DepthEnable
     false, // DepthWriteEnable
     false, // DepthClipEnable
+    false, // DepthBoundsEnable
     ComparisonFunc::Less, // DepthFunc
     false, // StencilEnable
     0xff, // StencilReadMask
@@ -255,8 +256,6 @@ uint64 GPUResource::GetMemoryUsage() const
     return _memoryUsage;
 }
 
-static_assert((GPU_ENABLE_RESOURCE_NAMING) == (!BUILD_RELEASE), "Update build condition on around GPUResource Name property getter/setter.");
-
 #if GPU_ENABLE_RESOURCE_NAMING
 
 StringView GPUResource::GetName() const
@@ -279,6 +278,22 @@ void GPUResource::SetName(const StringView& name)
         Platform::MemoryCopy(_namePtr, name.Get(), _nameSize * sizeof(Char));
         _namePtr[_nameSize] = 0;
     }
+    OnRenamed();
+}
+
+void GPUResource::OnRenamed()
+{
+}
+
+#elif !BUILD_RELEASE
+
+StringView GPUResource::GetName() const
+{
+    return StringView::Empty;
+}
+
+void GPUResource::SetName(const StringView& name)
+{
 }
 
 #endif
@@ -390,8 +405,6 @@ bool GPUDevice::Init()
 
     _res->TasksManager.SetExecutor(CreateTasksExecutor());
     LOG(Info, "Total graphics memory: {0}", Utilities::BytesToText(TotalGraphicsMemory));
-    if (!Limits.HasCompute)
-        LOG(Warning, "Compute Shaders are not supported");
     for (const auto& videoOutput : VideoOutputs)
         LOG(Info, "Video output '{0}' {1}x{2} {3} Hz", videoOutput.Name, videoOutput.Width, videoOutput.Height, videoOutput.RefreshRate);
     Engine::RequestingExit.Bind<GPUDevice, &GPUDevice::OnRequestingExit>(this);

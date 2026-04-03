@@ -318,7 +318,7 @@ void Asset::OnDeleteObject()
 
         // Delete file
         if (!IsVirtual())
-            Content::deleteFileSafety(path, id);
+            Content::deleteFileSafety(path, &id);
     }
 #endif
 }

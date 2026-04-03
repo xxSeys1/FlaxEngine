@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "Engine/Core/Log.h"
 #include "Engine/Core/Types/DataContainer.h"
+#include "Engine/Content/Deprecated.h"
 #include "Engine/Content/Upgraders/ShaderAssetUpgrader.h"
 #include "Engine/Content/Factories/BinaryAssetFactory.h"
 #include "Engine/Graphics/RenderTools.h"
@@ -457,10 +458,6 @@ void Material::OnDependencyModified(BinaryAsset* asset)
     Reload();
 }
 
-#endif
-
-#if USE_EDITOR
-
 void Material::InitCompilationOptions(ShaderCompilationOptions& options)
 {
     // Base
@@ -478,7 +475,7 @@ void Material::InitCompilationOptions(ShaderCompilationOptions& options)
     const bool useForward = ((info.Domain == MaterialDomain::Surface || info.Domain == MaterialDomain::Deformable) && !isOpaque) || info.Domain == MaterialDomain::Particle;
     const bool useTess =
             info.TessellationMode != TessellationMethod::None &&
-            RenderTools::CanSupportTessellation(options.Profile) && isSurfaceOrTerrainOrDeformable;
+            EnumHasAllFlags(RenderTools::GetShaderProfileFeatures(options.Profile), ShaderProfileFeatures::TessellationShaders) && isSurfaceOrTerrainOrDeformable;
     const bool useDistortion =
             (info.Domain == MaterialDomain::Surface || info.Domain == MaterialDomain::Deformable || info.Domain == MaterialDomain::Particle) &&
             !isOpaque &&

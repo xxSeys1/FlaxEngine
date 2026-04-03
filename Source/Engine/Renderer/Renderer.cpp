@@ -50,7 +50,7 @@ bool IsBakingLightmaps = false;
 bool EnableLightmapsUsage = true;
 #endif
 
-Array<RendererPassBase*> PassList(64);
+Array<RendererPassBase*> PassList;
 
 class RendererService : public EngineService
 {
@@ -73,6 +73,7 @@ bool RendererService::Init()
     PROFILE_MEM(Graphics);
 
     // Register passes
+    PassList.EnsureCapacity(64);
     PassList.Add(GBufferPass::Instance());
     PassList.Add(ShadowsPass::Instance());
     PassList.Add(LightPass::Instance());
@@ -105,6 +106,7 @@ bool RendererService::Init()
         return false;
     }
 
+#if GPU_ENABLE_PRELOADING_RESOURCES
     // Init child services
     for (int32 i = 0; i < PassList.Count(); i++)
     {
@@ -114,6 +116,7 @@ bool RendererService::Init()
             return true;
         }
     }
+#endif
 
     return false;
 }
@@ -140,7 +143,7 @@ void RenderAntiAliasingPass(RenderContext& renderContext, GPUTexture* input, GPU
             // AA -> CAS -> Output
             auto tmpImage = RenderTargetPool::Get(input->GetDescription());
             RENDER_TARGET_POOL_SET_NAME(tmpImage, "TmpImage");
-            context->SetViewportAndScissors((float)input->Width(), (float)input->Height());
+            context->SetViewportAndScissors((float)tmpImage->Width(), (float)tmpImage->Height());
             if (aaMode == AntialiasingMode::FastApproximateAntialiasing)
                 FXAA::Instance()->Render(renderContext, input, tmpImage->View());
             else
@@ -173,6 +176,27 @@ void RenderAntiAliasingPass(RenderContext& renderContext, GPUTexture* input, GPU
             context->Draw(input);
         }
     }
+}
+
+void RenderLightBuffer(const SceneRenderTask* task, GPUContext* context, RenderContext& renderContext, GPUTexture* lightBuffer, const GPUTextureDescription& tempDesc)
+{
+    context->ResetRenderTarget();
+    auto colorGradingLUT = ColorGradingPass::Instance()->RenderLUT(renderContext);
+    auto tempBuffer = RenderTargetPool::Get(tempDesc);
+    RENDER_TARGET_POOL_SET_NAME(tempBuffer, "TempBuffer");
+    EyeAdaptationPass::Instance()->Render(renderContext, lightBuffer);
+    PostProcessingPass::Instance()->Render(renderContext, lightBuffer, tempBuffer, colorGradingLUT);
+    context->ResetRenderTarget();
+    if (renderContext.List->Settings.AntiAliasing.Mode == AntialiasingMode::TemporalAntialiasing)
+    {
+        TAA::Instance()->Render(renderContext, tempBuffer, lightBuffer->View());
+        Swap(lightBuffer, tempBuffer);
+    }
+    RenderTargetPool::Release(lightBuffer);
+    context->SetRenderTarget(task->GetOutputView());
+    context->SetViewportAndScissors(task->GetOutputViewport());
+    context->Draw(tempBuffer);
+    RenderTargetPool::Release(tempBuffer);
 }
 
 bool Renderer::IsReady()
@@ -347,10 +371,12 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
     // Perform postFx volumes blending and query before rendering
     task->CollectPostFxVolumes(renderContext);
     renderContext.List->BlendSettings();
-    auto aaMode = EnumHasAnyFlags(renderContext.View.Flags, ViewFlags::AntiAliasing) ? renderContext.List->Settings.AntiAliasing.Mode : AntialiasingMode::None;
-    if (aaMode == AntialiasingMode::TemporalAntialiasing && view.IsOrthographicProjection())
-        aaMode = AntialiasingMode::None; // TODO: support TAA in ortho projection (see RenderView::Prepare to jitter projection matrix better)
-    renderContext.List->Settings.AntiAliasing.Mode = aaMode;
+    {
+        auto aaMode = EnumHasAnyFlags(renderContext.View.Flags, ViewFlags::AntiAliasing) ? renderContext.List->Settings.AntiAliasing.Mode : AntialiasingMode::None;
+        if (aaMode == AntialiasingMode::TemporalAntialiasing && view.IsOrthographicProjection())
+            aaMode = AntialiasingMode::None; // TODO: support TAA in ortho projection (see RenderView::Prepare to jitter projection matrix better)
+        renderContext.List->Settings.AntiAliasing.Mode = aaMode;
+    }
 
     // Initialize setup
     RenderSetup& setup = renderContext.List->Setup;
@@ -372,7 +398,7 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
                     (ssrSettings.Intensity > ZeroTolerance && ssrSettings.TemporalEffect && EnumHasAnyFlags(renderContext.View.Flags, ViewFlags::SSR)) ||
                     renderContext.List->Settings.AntiAliasing.Mode == AntialiasingMode::TemporalAntialiasing;
         }
-        setup.UseTemporalAAJitter = aaMode == AntialiasingMode::TemporalAntialiasing;
+        setup.UseTemporalAAJitter = renderContext.List->Settings.AntiAliasing.Mode == AntialiasingMode::TemporalAntialiasing;
         setup.UseGlobalSurfaceAtlas = renderContext.View.Mode == ViewMode::GlobalSurfaceAtlas ||
                 (EnumHasAnyFlags(renderContext.View.Flags, ViewFlags::GI) && renderContext.List->Settings.GlobalIllumination.Mode == GlobalIlluminationMode::DDGI);
         setup.UseGlobalSDF = (graphicsSettings->EnableGlobalSDF && EnumHasAnyFlags(view.Flags, ViewFlags::GlobalSDF)) ||
@@ -539,7 +565,7 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
     // Get the light accumulation buffer
     auto outputFormat = renderContext.Buffers->GetOutputFormat();
     auto tempFlags = GPUTextureFlags::ShaderResource | GPUTextureFlags::RenderTarget;
-    if (GPUDevice::Instance->Limits.HasCompute)
+    if (GPUDevice::Instance->Limits.HasCompute && EnumHasAllFlags(GPUDevice::Instance->GetFormatFeatures(outputFormat).Support, FormatSupport::UnorderedAccessReadOnly | FormatSupport::UnorderedAccessWriteOnly))
         tempFlags |= GPUTextureFlags::UnorderedAccess;
     auto tempDesc = GPUTextureDescription::New2D(renderContext.Buffers->GetWidth(), renderContext.Buffers->GetHeight(), outputFormat, tempFlags);
     auto lightBuffer = RenderTargetPool::Get(tempDesc);
@@ -627,22 +653,7 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
     }
     if (renderContext.View.Mode == ViewMode::LightBuffer)
     {
-        auto colorGradingLUT = ColorGradingPass::Instance()->RenderLUT(renderContext);
-        auto tempBuffer = RenderTargetPool::Get(tempDesc);
-        RENDER_TARGET_POOL_SET_NAME(tempBuffer, "TempBuffer");
-        EyeAdaptationPass::Instance()->Render(renderContext, lightBuffer);
-        PostProcessingPass::Instance()->Render(renderContext, lightBuffer, tempBuffer, colorGradingLUT);
-        context->ResetRenderTarget();
-        if (aaMode == AntialiasingMode::TemporalAntialiasing)
-        {
-            TAA::Instance()->Render(renderContext, tempBuffer, lightBuffer->View());
-            Swap(lightBuffer, tempBuffer);
-        }
-        RenderTargetPool::Release(lightBuffer);
-        context->SetRenderTarget(task->GetOutputView());
-        context->SetViewportAndScissors(task->GetOutputViewport());
-        context->Draw(tempBuffer);
-        RenderTargetPool::Release(tempBuffer);
+        RenderLightBuffer(task, context, renderContext, lightBuffer, tempDesc);
         return;
     }
 
@@ -653,11 +664,13 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
     ReflectionsPass::Instance()->Render(renderContext, *lightBuffer);
     if (renderContext.View.Mode == ViewMode::Reflections)
     {
-        context->ResetRenderTarget();
-        context->SetRenderTarget(task->GetOutputView());
-        context->SetViewportAndScissors(task->GetOutputViewport());
-        context->Draw(lightBuffer);
-        RenderTargetPool::Release(lightBuffer);
+        renderContext.List->Settings.ToneMapping.Mode = ToneMappingMode::Neutral;
+        renderContext.List->Settings.Bloom.Enabled = false;
+        renderContext.List->Settings.LensFlares.Intensity = 0.0f;
+        renderContext.List->Settings.CameraArtifacts.GrainAmount = 0.0f;
+        renderContext.List->Settings.CameraArtifacts.ChromaticDistortion = 0.0f;
+        renderContext.List->Settings.CameraArtifacts.VignetteIntensity = 0.0f;
+        RenderLightBuffer(task, context, renderContext, lightBuffer, tempDesc);
         return;
     }
 
@@ -672,12 +685,12 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
         renderContext.List->AtmosphericFog->DrawFog(context, renderContext, *lightBuffer);
         context->ResetSR();
     }
-    if (renderContext.List->Fog)
+    if (renderContext.List->Fog.Renderer)
     {
         VolumetricFogPass::Instance()->Render(renderContext);
 
         PROFILE_GPU_CPU("Fog");
-        renderContext.List->Fog->DrawFog(context, renderContext, *lightBuffer);
+        renderContext.List->Fog.Renderer->DrawFog(context, renderContext, *lightBuffer);
         context->ResetSR();
     }
 
@@ -713,7 +726,7 @@ void RenderInner(SceneRenderTask* task, RenderContext& renderContext, RenderCont
     renderContext.List->RunCustomPostFxPass(context, renderContext, PostProcessEffectLocation::BeforePostProcessingPass, frameBuffer, tempBuffer);
 
     // Temporal Anti-Aliasing (goes before post processing)
-    if (aaMode == AntialiasingMode::TemporalAntialiasing)
+    if (renderContext.List->Settings.AntiAliasing.Mode == AntialiasingMode::TemporalAntialiasing)
     {
         TAA::Instance()->Render(renderContext, frameBuffer, tempBuffer->View());
         Swap(frameBuffer, tempBuffer);
