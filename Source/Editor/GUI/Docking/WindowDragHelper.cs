@@ -41,6 +41,7 @@ namespace FlaxEditor.GUI.Docking
         private WindowDragHelper(FloatWindowDockPanel toMove, Window dragSourceWindow)
         {
             IsDragActive = true;
+            toMove.IsDragging = true;
             _toMove = toMove;
             _toSet = DockState.Float;
             var window = toMove.Window.Window;
@@ -107,6 +108,8 @@ namespace FlaxEditor.GUI.Docking
         public void Dispose()
         {
             IsDragActive = false;
+            if (_toMove != null)
+                _toMove.IsDragging = false;
             var window = _toMove?.Window?.Window;
 
             // Unbind events
@@ -362,6 +365,9 @@ namespace FlaxEditor.GUI.Docking
 
                 // Cache dock rectangles
                 var size = _rectDock.Size / Platform.DpiScale;
+#if PLATFORM_MAC && !PLATFORM_SDL
+                size *= (float)Platform.Dpi / 96.0f; // TODO: refactor DPI support on macOS to skip such hacks
+#endif
                 var offset = _toDock.PointFromScreen(_rectDock.Location);
                 var borderMargin = 10.0f;
                 var hintWindowsSize = HintControlSize;

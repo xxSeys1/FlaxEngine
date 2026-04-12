@@ -32,7 +32,7 @@ namespace FlaxEditor.GUI.Docking
                 return base.OnMouseDown(location, button);
             }
 
-#if !PLATFORM_WINDOWS
+#if PLATFORM_LINUX
             /// <inheritdoc />
             protected override WindowHitCodes OnHitTest(ref Float2 mouse)
             {
@@ -59,6 +59,11 @@ namespace FlaxEditor.GUI.Docking
         /// Gets the window.
         /// </summary>
         public WindowRootControl Window => _window;
+
+        /// <summary>
+        /// True if user is dragging this panel.
+        /// </summary>
+        public bool IsDragging { get; internal set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FloatWindowDockPanel"/> class.
