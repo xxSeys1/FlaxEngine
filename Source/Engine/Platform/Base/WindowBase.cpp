@@ -9,6 +9,7 @@
 #include "Engine/Graphics/GPUSwapChain.h"
 #include "Engine/Graphics/GPUDevice.h"
 #include "Engine/Input/Input.h"
+#include "Engine/Platform/IGuiData.h"
 #include "Engine/Scripting/ScriptingType.h"
 #include "Engine/Profiler/ProfilerCPU.h"
 #include "Engine/Profiler/ProfilerMemory.h"
