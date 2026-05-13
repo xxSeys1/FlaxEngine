@@ -17,7 +17,6 @@ public:
     static void Init();
     static void Update();
     static bool WndProc(Window* window, Windows::UINT msg, Windows::WPARAM wParam, Windows::LPARAM lParam);
-    static void SyncKeyState();
 };
 
 #endif
