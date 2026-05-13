@@ -23,7 +23,7 @@ API_INJECT_CODE(cpp, "#include \"Engine/Platform/Window.h\"");
 /// <summary>
 /// Native platform window object.
 /// </summary>
-API_CLASS(NoSpawn, NoConstructor, Sealed, Name="Window")
+API_CLASS(NoSpawn, NoConstructor, Sealed, Name = "Window")
 class FLAXENGINE_API WindowBase : public ScriptingObject
 {
     DECLARE_SCRIPTING_TYPE_NO_SPAWN(WindowBase);
@@ -207,15 +207,13 @@ public:
     /// Minimizes the window.
     /// </summary>
     API_FUNCTION() virtual void Minimize()
-    {
-    }
+    {}
 
     /// <summary>
     /// Maximizes the window.
     /// </summary>
     API_FUNCTION() virtual void Maximize()
-    {
-    }
+    {}
 
     /// <summary>
     /// Sets the window to be borderless or not and to be fullscreen.
@@ -223,15 +221,13 @@ public:
     /// <param name="isBorderless">Whether or not to have borders on window.</param>
     /// <param name="maximized">Whether or not to make the borderless window fullscreen (maximize to cover whole screen).</param>
     API_FUNCTION() virtual void SetBorderless(bool isBorderless, bool maximized = false)
-    {
-    }
+    {}
 
     /// <summary>
     /// Restores the window state before minimizing or maximizing.
     /// </summary>
     API_FUNCTION() virtual void Restore()
-    {
-    }
+    {}
 
     /// <summary>
     /// Closes the window.
@@ -263,8 +259,7 @@ public:
     /// </summary>
     /// <param name="clientArea">The client area.</param>
     API_PROPERTY() virtual void SetClientBounds(const Rectangle& clientArea)
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the window position (in screen coordinates).
@@ -279,8 +274,7 @@ public:
     /// </summary>
     /// <param name="position">The position.</param>
     API_PROPERTY() virtual void SetPosition(const Float2& position)
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the client position of the window (client area not including border).
@@ -392,8 +386,7 @@ public:
     /// </summary>
     /// <param name="opacity">The opacity.</param>
     API_PROPERTY() virtual void SetOpacity(float opacity)
-    {
-    }
+    {}
 
     /// <summary>
     /// Determines whether this window is focused.
@@ -407,23 +400,20 @@ public:
     /// Focuses this window.
     /// </summary>
     API_FUNCTION() virtual void Focus()
-    {
-    }
+    {}
 
     /// <summary>
     /// Brings window to the front of the Z order.
     /// </summary>
     /// <param name="force">True if move to the front by force, otherwise false.</param>
     API_FUNCTION() virtual void BringToFront(bool force = false)
-    {
-    }
+    {}
 
     /// <summary>
     /// Flashes the window to bring use attention.
     /// </summary>
     API_FUNCTION() virtual void FlashWindow()
-    {
-    }
+    {}
 
 public:
     /// <summary>
@@ -453,8 +443,7 @@ public:
     /// </summary>
     /// <param name="useMouseScreenOffset">If set to <c>true</c> will use mouse screen offset.</param>
     API_FUNCTION() virtual void StartTrackingMouse(bool useMouseScreenOffset)
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the mouse tracking offset.
@@ -492,16 +481,14 @@ public:
     /// Ends the mouse tracking.
     /// </summary>
     API_FUNCTION() virtual void EndTrackingMouse()
-    {
-    }
+    {}
 
     /// <summary>
     /// Starts the cursor clipping.
     /// </summary>
     /// <param name="bounds">The screen-space bounds that the cursor will be confined to.</param>
     API_FUNCTION() virtual void StartClippingCursor(const Rectangle& bounds)
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the value indicating whenever the cursor is being clipped.
@@ -515,8 +502,7 @@ public:
     /// Ends the cursor clipping.
     /// </summary>
     API_FUNCTION() virtual void EndClippingCursor()
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the mouse position in window coordinates.
@@ -551,8 +537,7 @@ public:
     /// </summary>
     /// <param name="icon">The icon.</param>
     virtual void SetIcon(TextureData& icon)
-    {
-    }
+    {}
 
     /// <summary>
     /// Gets the value indicating whenever rendering to this window enabled.

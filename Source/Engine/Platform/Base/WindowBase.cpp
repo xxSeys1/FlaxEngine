@@ -9,9 +9,6 @@
 #include "Engine/Graphics/GPUSwapChain.h"
 #include "Engine/Graphics/GPUDevice.h"
 #include "Engine/Input/Input.h"
-#include "Engine/Input/Keyboard.h"
-#include "Engine/Input/Mouse.h"
-#include "Engine/Platform/IGuiData.h"
 #include "Engine/Scripting/ScriptingType.h"
 #include "Engine/Profiler/ProfilerCPU.h"
 #include "Engine/Profiler/ProfilerMemory.h"
@@ -175,8 +172,7 @@ bool WindowBase::IsAlwaysOnTop() const
 }
 
 void WindowBase::SetIsAlwaysOnTop(bool isAlwaysOnTop)
-{
-}
+{}
 
 String WindowBase::ToString() const
 {
@@ -460,12 +456,6 @@ void WindowBase::OnClosed()
     // Disable rendering
     if (RenderTask)
         RenderTask->Enabled = false;
-    
-    // Reset input state when closing window to remove any stuck inputs.
-    if (Input::Mouse)
-        Input::Mouse->ResetState();
-    if (Input::Keyboard)
-        Input::Keyboard->ResetState();
 
     // Delete object
     DeleteObject(1);

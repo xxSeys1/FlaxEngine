@@ -147,7 +147,7 @@ WindowsWindow::WindowsWindow(const CreateWindowSettings& settings)
     const HMODULE user32Dll = LoadLibraryW(L"user32.dll");
     if (user32Dll)
     {
-        typedef UINT (STDAPICALLTYPE*GetDpiForWindowProc)(HWND hwnd);
+        typedef UINT(STDAPICALLTYPE* GetDpiForWindowProc)(HWND hwnd);
         const GetDpiForWindowProc getDpiForWindowProc = (GetDpiForWindowProc)GetProcAddress(user32Dll, "GetDpiForWindow");
         if (getDpiForWindowProc)
         {
@@ -746,7 +746,7 @@ void WindowsWindow::UpdateCursor()
         if (!_lastCursorHidden)
         {
             _lastCursorHidden = true;
-            while(::ShowCursor(FALSE) >= 0)
+            while (::ShowCursor(FALSE) >= 0)
             {
                 if (_cursorHiddenSafetyCount >= 100)
                 {
@@ -763,7 +763,7 @@ void WindowsWindow::UpdateCursor()
     else if (_lastCursorHidden)
     {
         _lastCursorHidden = false;
-        while(::ShowCursor(TRUE) < 0)
+        while (::ShowCursor(TRUE) < 0)
         {
             if (_cursorHiddenSafetyCount >= 100)
             {
