@@ -458,6 +458,10 @@ void WindowBase::OnClosed()
     // Disable rendering
     if (RenderTask)
         RenderTask->Enabled = false;
+    
+    // Reset input state when closing window to remove any stuck inputs.
+    Input::Mouse->ResetState();
+    Input::Keyboard->ResetState();
 
     // Delete object
     DeleteObject(1);
