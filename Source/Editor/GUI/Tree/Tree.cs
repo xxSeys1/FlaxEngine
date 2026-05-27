@@ -70,6 +70,11 @@ namespace FlaxEditor.GUI.Tree
         public TreeNode SelectedNode => Selection.Count > 0 ? Selection[0] : null;
 
         /// <summary>
+        /// Whether tree lines should be visible.
+        /// </summary>
+        public bool DrawTreeLines = false;
+
+        /// <summary>
         /// Allow nodes to Draw the root tree line.
         /// </summary>
         public bool DrawRootTreeLine = true;

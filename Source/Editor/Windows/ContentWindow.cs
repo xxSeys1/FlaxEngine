@@ -161,7 +161,7 @@ namespace FlaxEditor.Windows
             FlaxEditor.Utilities.Utils.SetupCommonInputActions(this);
 
             var options = Editor.Options;
-            options.OptionsChanged += OnOptionsChanged;
+            options.OptionsChanged += OnEditorOptionsChanged;
 
             // Toolstrip
             _toolStrip = new ToolStrip(34.0f)
@@ -233,6 +233,7 @@ namespace FlaxEditor.Windows
             // Content structure tree
             _tree = new Tree(true)
             {
+                DrawTreeLines = options.Options.Interface.ShowContentWindowTreeLines,
                 DrawRootTreeLine = false,
                 Parent = _contentTreePanel,
             };
@@ -472,9 +473,10 @@ namespace FlaxEditor.Windows
             return menu;
         }
 
-        private void OnOptionsChanged(EditorOptions options)
+        private void OnEditorOptionsChanged(EditorOptions options)
         {
             _split.Orientation = options.Interface.ContentWindowOrientation;
+            _tree.DrawTreeLines = options.Interface.ShowContentWindowTreeLines;
 
             RefreshView();
         }
@@ -1847,7 +1849,7 @@ namespace FlaxEditor.Windows
             _treeOnlyPanel = null;
             _contentItemsSearchPanel = null;
 
-            Editor.Options.OptionsChanged -= OnOptionsChanged;
+            Editor.Options.OptionsChanged -= OnEditorOptionsChanged;
             ScriptsBuilder.ScriptsReloadBegin -= OnScriptsReloadBegin;
             ScriptsBuilder.ScriptsReloadEnd -= OnScriptsReloadEnd;
             if (Editor?.ContentDatabase != null)

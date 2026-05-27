@@ -13,6 +13,7 @@ using FlaxEditor.Scripting;
 using FlaxEditor.States;
 using FlaxEngine;
 using FlaxEngine.GUI;
+using FlaxEditor.Options;
 
 namespace FlaxEditor.Windows
 {
@@ -111,6 +112,15 @@ namespace FlaxEditor.Windows
             InputActions.Add(options => options.FocusSelection, () => Editor.Windows.EditWin.Viewport.FocusSelection());
             InputActions.Add(options => options.LockFocusSelection, () => Editor.Windows.EditWin.Viewport.LockFocusSelection());
             InputActions.Add(options => options.Rename, RenameSelection);
+
+            var options = Editor.Instance.Options;
+            options.OptionsChanged += OnEditorOptionsChanged;
+            OnEditorOptionsChanged(options.Options);
+        }
+
+        private void OnEditorOptionsChanged(EditorOptions options)
+        {
+            _tree.DrawTreeLines = options.Interface.ShowSceneTreeTreeLines;
         }
 
         /// <inheritdoc />
@@ -591,6 +601,7 @@ namespace FlaxEditor.Windows
             _tree = null;
             _searchBox = null;
             ScriptsBuilder.ScriptsReloadEnd -= OnSearchBoxTextChanged;
+            Editor.Instance.Options.OptionsChanged -= OnEditorOptionsChanged;
 
             base.OnDestroy();
         }

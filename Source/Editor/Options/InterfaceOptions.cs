@@ -226,6 +226,43 @@ namespace FlaxEditor.Options
         }
 
         /// <summary>
+        /// Options for visibility of <see cref="GUI.Tree.Tree"/> tree lines in various editor windows.
+        /// </summary>
+        [Flags]
+        public enum TreeLineVisibility
+        {
+            /// <summary>
+            /// Show no tree lines.
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            /// Show tree lines in the <see cref="Windows.SceneTreeWindow"/>. 
+            /// </summary>
+            SceneTree = 1,
+
+            /// <summary>
+            /// Show tree lines in the <see cref="Windows.ContentWindow"/>.
+            /// </summary>
+            ContentPanel = 2,
+
+            /// <summary>
+            /// Show all tree lines.
+            /// </summary>
+            All = SceneTree | ContentPanel,
+        }
+
+        /// <summary>
+        /// Gets a value whether tree lines are visible in the <see cref="Windows.SceneTreeWindow"/>.
+        /// </summary>
+        public bool ShowSceneTreeTreeLines => ShowTreeLines.HasFlag(TreeLineVisibility.SceneTree);
+
+        /// <summary>
+        /// Gets a value whether tree lines are visible in the <see cref="Windows.ContentWindow"/>.
+        /// </summary>
+        public bool ShowContentWindowTreeLines => ShowTreeLines.HasFlag(TreeLineVisibility.ContentPanel);
+
+        /// <summary>
         /// Gets or sets the Editor User Interface scale. Applied to all UI elements, windows and text. Can be used to scale the interface up on a bigger display. Editor restart required.
         /// </summary>
         [DefaultValue(1.0f), Limit(0.1f, 10.0f)]
@@ -275,11 +312,11 @@ namespace FlaxEditor.Options
         public bool AutoSizePropertiesPanelSplitter { get; set; }
 
         /// <summary>
-        /// Gets or sets tree line visibility.
+        /// Which tree lines should be visible.
         /// </summary>
-        [DefaultValue(true)]
-        [EditorDisplay("Interface"), EditorOrder(320), Tooltip("Toggles tree line visibility in places like the Scene or Content Panel.")]
-        public bool ShowTreeLines { get; set; } = true;
+        [DefaultValue(TreeLineVisibility.All)]
+        [EditorDisplay("Interface"), EditorOrder(320)]
+        public TreeLineVisibility ShowTreeLines { get; set; } = TreeLineVisibility.SceneTree | TreeLineVisibility.ContentPanel;
 
         /// <summary>
         /// Gets or sets tooltip text alignment.
