@@ -1,6 +1,8 @@
 // Copyright (c) Wojciech Figat. All rights reserved.
 
 using System;
+using System.Collections.Generic;
+using FlaxEditor.Content.GUI;
 using FlaxEngine;
 using FlaxEngine.GUI;
 
@@ -25,6 +27,9 @@ namespace FlaxEditor.GUI.Tree
 
         private const float _targetHighlightScale = 1.25f;
         private const float _highlightScaleAnimDuration = 0.85f;
+
+        private const float _arrowSize = 9f;
+        private const float _iconSize = 16f;
 
         private Tree _tree;
 
@@ -231,7 +236,7 @@ namespace FlaxEditor.GUI.Tree
         /// <summary>
         /// Gets the arrow rectangle.
         /// </summary>
-        public Rectangle ArrowRect => CustomArrowRect.HasValue ? CustomArrowRect.Value : new Rectangle(_xOffset + 2 + _margin.Left, 2, 12, 12);
+        public Rectangle ArrowRect => CustomArrowRect.HasValue ? CustomArrowRect.Value : new Rectangle(_xOffset + _margin.Left + 2, 4, new Float2(_arrowSize));
 
         /// <summary>
         /// Gets the header rectangle.
@@ -701,40 +706,40 @@ namespace FlaxEditor.GUI.Tree
             var tree = ParentTree;
             bool isSelected = tree.Selection.Contains(this);
             bool isFocused = tree.ContainsFocus;
-            var left = _xOffset + 16; // offset + arrow
-            var textRect = new Rectangle(left, 0, Width - left, _headerHeight);
+            float left = _xOffset + ArrowRect.Width + 6f;
+            Rectangle textRect = new Rectangle(left, 0, Width - left, _headerHeight);
             _margin.ShrinkRectangle(ref textRect);
 
             // Draw background
             if (isSelected || _mouseOverHeader)
             {
-                Render2D.FillRectangle(_headerRect, (isSelected && isFocused) ? BackgroundColorSelected : (_mouseOverHeader ? BackgroundColorHighlighted : BackgroundColorSelectedUnfocused));
+                Color color = (isSelected && isFocused) ? BackgroundColorSelected : (_mouseOverHeader ? BackgroundColorHighlighted : BackgroundColorSelectedUnfocused);
+                Rectangle backgroundRect = HeaderRect with { X = textRect.X - 3f, Width = textRect.Width };
+                Render2D.FillRectangle(backgroundRect, color);
             }
 
             // Draw arrow
             if (HasAnyVisibleChild)
-            {
                 Render2D.DrawSprite(_opened ? style.ArrowDown : style.ArrowRight, ArrowRect, _mouseOverHeader ? style.Foreground : style.ForegroundGrey);
-            }
 
             // Draw icon
             if (_iconCollaped.IsValid)
             {
-                Render2D.DrawSprite(_opened ? _iconOpened : _iconCollaped, new Rectangle(textRect.Left, 0, 16, 16), IconColor);
-                textRect.X += 18.0f;
-                textRect.Width -= 18.0f;
+                Render2D.DrawSprite(_opened ? _iconOpened : _iconCollaped, new Rectangle(textRect.Left, 0, new Float2(_iconSize)), IconColor);
+                textRect.X += _iconSize + 2f;
+                textRect.Width -= _iconSize + 2f;
             }
 
             float textWidth = TextFont.GetFont().MeasureText(_text).X;
-            Rectangle trueTextRect = textRect;
-            trueTextRect.Width = textWidth;
-            trueTextRect.Scale(_highlightScale);
+            Rectangle highlightRect = textRect;
+            highlightRect.Width = textWidth;
+            highlightRect.Scale(_highlightScale);
 
             if (_isHightlighted && _debounceHighlightTime > 0.1f)
             {
                 Color highlightBackgroundColor = Editor.Instance.Options.Options.Visual.HighlightColor;
                 highlightBackgroundColor = highlightBackgroundColor.AlphaMultiplied(0.3f);
-                Render2D.FillRectangle(trueTextRect, highlightBackgroundColor);
+                Render2D.FillRectangle(highlightRect, highlightBackgroundColor);
             }
 
             // Draw text
@@ -762,42 +767,59 @@ namespace FlaxEditor.GUI.Tree
             // Draw tree guidelines
             if (tree.DrawTreeLines)
             {
-                ContainerControl parent = Parent;
-                TreeNode parentNode = parent as TreeNode;
-                bool thisNodeIsLast = false;
-                while (parentNode != null && (parentNode != tree.Children[0] || tree.DrawRootTreeLine))
+                HashSet<TreeNode> selectedPathToRoot = GetSelectedNodeToRootNodePath();
+
+                TreeNode currentNode = this;
+                while (currentNode.Parent is TreeNode parentTreeNode)
                 {
+                    currentNode = parentTreeNode;
+
+                    if (currentNode == tree.Children[0] || tree.DrawRootTreeLine)
+                        break;
+
                     float bottomOffset = 0;
                     float topOffset = 0;
+                    bool drawVerticalLine = false;
+                    bool drawHorizontalLine = false;
 
-                    if (parent == parentNode && this == parent.Children[0])
-                        topOffset = 2;
+                    TreeNode parent = FindParentThatIsChildOf(currentNode);
+                    drawVerticalLine = (currentNode.ChildrenCount > 1 || currentNode.Children[0] == this) && (parent != currentNode.Children[^1] || parent == this);
+                    drawHorizontalLine = Parent.ChildrenCount > 0 && Parent == currentNode;
 
-                    if (thisNodeIsLast && parentNode.Children.Count == 1)
-                        bottomOffset = topOffset != 0 ? 4 : 2;
+                    if (!drawVerticalLine && !drawHorizontalLine)
+                        continue;
 
-                    if (parent == parentNode && this == parent.Children[^1] && !_opened)
-                    {
-                        thisNodeIsLast = true;
-                        bottomOffset = topOffset != 0 ? 4 : 2;
-                    }
+                    if (currentNode.ChildrenCount == 1 || (currentNode == Parent && this == Parent.Children[^1]))
+                        bottomOffset = currentNode.HeaderRect.Height * 0.5f;
 
                     float leftOffset = 9;
                     // Adjust offset for icon image
                     if (_iconCollaped.IsValid)
-                        leftOffset += 18;
-                    var lineRect1 = new Rectangle(parentNode.TextRect.Left - leftOffset, parentNode.HeaderRect.Top + topOffset, 1, parentNode.HeaderRect.Height - bottomOffset);
-                    if (HasAnyVisibleChild && CustomArrowRect.HasValue && CustomArrowRect.Value.Intersects(lineRect1))
-                        lineRect1 = Rectangle.Empty; // Skip drawing line if it's overlapping the arrow rectangle
-                    Render2D.FillRectangle(lineRect1, isSelected ? style.ForegroundGrey : style.LightBackground);
-                    parentNode = parentNode.Parent as TreeNode;
+                        leftOffset += _iconSize + 2f;
+
+                    Color lineColor = isSelected ? style.ForegroundGrey : style.LightBackground;
+                    Rectangle verticalLineRect = new Rectangle(currentNode.TextRect.Left - leftOffset, currentNode.HeaderRect.Top + topOffset, 1f, currentNode.HeaderRect.Height - bottomOffset);
+
+                    if (drawVerticalLine)
+                    {
+                        if (HasAnyVisibleChild && CustomArrowRect.HasValue && CustomArrowRect.Value.Intersects(verticalLineRect))
+                            verticalLineRect = Rectangle.Empty; // Skip drawing line if it's overlapping the arrow rectangle
+
+                        Render2D.FillRectangle(verticalLineRect, lineColor);
+                    }
+
+                    if (drawHorizontalLine)
+                    {
+                        Rectangle horizontalLineRect = new Rectangle(verticalLineRect.X + 1f, TextRect.Center.Y, 6f, 1f);
+                        Render2D.DrawRectangle(horizontalLineRect, lineColor);
+                    }
                 }
             }
 
+            // Draw highlights
             if (_isHightlighted && _debounceHighlightTime > 0.1f)
             {
-                // Draw highlights
-                Render2D.DrawRectangle(trueTextRect, Editor.Instance.Options.Options.Visual.HighlightColor, 3);
+                Render2D.DrawRectangle(highlightRect, Editor.Instance.Options.Options.Visual.HighlightColor, 3);
             }
 
             // Base
@@ -814,6 +836,25 @@ namespace FlaxEditor.GUI.Tree
                     base.Draw();
                 }
             }
+        }
+
+        private TreeNode FindParentThatIsChildOf(TreeNode childOf)
+        {
+            TreeNode node = null;
+
+            ContainerControl currentNode = this;
+            while (currentNode != null)
+            {
+                if (currentNode.Parent == childOf)
+                {
+                    node = currentNode as TreeNode;
+                    break;
+                }
+
+                currentNode = currentNode.Parent;
+            }
+
+            return node;
         }
 
         /// <inheritdoc />
