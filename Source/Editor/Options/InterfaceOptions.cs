@@ -161,7 +161,7 @@ namespace FlaxEditor.Options
         }
 
         /// <summary>
-        /// Options for focus Game Window behaviour when play mode is entered.
+        /// Options for focus Game Window behavior when play mode is entered.
         /// </summary>
         public enum PlayModeFocus
         {
@@ -581,11 +581,11 @@ namespace FlaxEditor.Options
         public bool WarnOnDeletingUsedVisjectParameter { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating what should happen to unavaliable options in the content create menu.
+        /// Gets or sets a value indicating what should happen to unavailable options in the content create menu.
         /// </summary>
         [DefaultValue(DisabledHidden.Hidden)]
         [EditorDisplay("Content"), EditorOrder(600)]
-        public DisabledHidden UnavaliableContentCreateOptions { get; set; } = DisabledHidden.Hidden;
+        public DisabledHidden UnavailableContentCreateOptions { get; set; } = DisabledHidden.Hidden;
 
         private static FontAsset DefaultFont => FlaxEngine.Content.LoadAsyncInternal<FontAsset>(EditorAssets.PrimaryFont);
         private static FontAsset ConsoleFont => FlaxEngine.Content.LoadAsyncInternal<FontAsset>(EditorAssets.InconsolataRegularFont);

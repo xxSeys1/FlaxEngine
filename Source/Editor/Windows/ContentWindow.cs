@@ -333,12 +333,12 @@ namespace FlaxEditor.Windows
             var menu = new ContextMenu();
             
             InterfaceOptions interfaceOptions = Editor.Instance.Options.Options.Interface;
-            bool disableUnavaliable = interfaceOptions.UnavaliableContentCreateOptions == InterfaceOptions.DisabledHidden.Disabled;
+            bool disableUnavailable = interfaceOptions.UnavailableContentCreateOptions == InterfaceOptions.DisabledHidden.Disabled;
 
-            CreateNewFolderMenu(menu, CurrentViewFolder, disableUnavaliable);
-            CreateNewModuleMenu(menu, CurrentViewFolder, disableUnavaliable);
+            CreateNewFolderMenu(menu, CurrentViewFolder, disableUnavailable);
+            CreateNewModuleMenu(menu, CurrentViewFolder, disableUnavailable);
             menu.AddSeparator();
-            CreateNewContentItemMenu(menu, CurrentViewFolder, false, disableUnavaliable);
+            CreateNewContentItemMenu(menu, CurrentViewFolder, false, disableUnavailable);
             // Hack: Show the menu once to get the direction, then show it above or below the button depending on the direction.
             menu.Show(this, _createNewButton.UpperLeft);
             var direction = menu.Direction;
@@ -932,7 +932,7 @@ namespace FlaxEditor.Windows
         /// Pastes the specified files.
         /// </summary>
         /// <param name="files">The files paths to import.</param>
-        /// <param name="isCutting">Whether a cutting action is occuring.</param>
+        /// <param name="isCutting">Whether a cutting action is occurring.</param>
         public void Paste(string[] files, bool isCutting)
         {
             var importFiles = new List<string>();
