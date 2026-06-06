@@ -133,7 +133,8 @@ namespace FlaxEditor.Windows
 
                     if (item is AssetItem assetItem)
                     {
-                        if (assetItem.IsLoaded)
+                        var asset = FlaxEngine.Content.GetAsset(assetItem.ID);
+                        if (asset != null && (asset.IsLoaded || asset.LastLoadFailed))
                             cm.AddButton("Reload", assetItem.Reload);
 
                         var scriptItem = TypeUtils.GetType(assetItem.TypeName).ContentItem;
