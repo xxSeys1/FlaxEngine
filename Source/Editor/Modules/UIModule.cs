@@ -837,7 +837,7 @@ namespace FlaxEditor.Modules
             WindowDecorations = new MainWindowDecorations(mainWindow, !Utilities.Utils.UseCustomWindowDecorations(true))
             {
                 Parent = mainWindow,
-                IconTooltipText = $"{mainWindow.RootWindow.Title}\nPath {projectPath}\n\nEngine Version {Globals.EngineVersion}{largeWorld}\nConfiguration {configuration}\n\nGraphics {GPUDevice.Instance.RendererType}{driver}",
+                IconTooltipText = $"{mainWindow.RootWindow.Title}\nPath {projectPath}\n\nEngine Version {Globals.EngineVersion}{largeWorld}\nSaas\nConfiguration {configuration}\n\nGraphics {GPUDevice.Instance.RendererType}{driver}",
             };
         }
 
