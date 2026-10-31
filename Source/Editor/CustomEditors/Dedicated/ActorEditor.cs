@@ -123,7 +123,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
                             ClipText = true,
                             Parent = _prefabButtonsGridPanel,
                         };
-                        viewChanges.Clicked += () => ViewChanges(viewChanges, new Float2(0.0f, 20.0f));
+                        viewChanges.Clicked += () => ViewChanges(viewChanges, new Float2(viewChanges.Width + Utilities.Constants.UIMargin, 20.0f));
 
                         _prefabButtonsGridPanel.Bounds = new Rectangle(Utilities.Constants.UIMargin, Utilities.Constants.UIMargin, propertiesWindow.HeaderPanel.Width - 8, 20.0f);
 
@@ -506,7 +506,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
             }
 
             // Create context menu
-            var cm = new PrefabDiffContextMenu();
+            var cm = new PrefabDiffContextMenu(Editor.Instance.Windows.PropertiesWin.HeaderPanel.Width);
             cm.Tree.AddChild(rootNode);
             cm.Tree.RightClick += OnDiffNodeRightClick;
             cm.Tree.Tag = cm;
