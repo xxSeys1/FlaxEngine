@@ -7,7 +7,7 @@ using FlaxEditor.GUI;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.GUI.Tree;
 using FlaxEditor.Scripting;
-using FlaxEditor.Windows.Assets;
+using FlaxEditor.Windows;
 using FlaxEngine;
 using FlaxEngine.GUI;
 using FlaxEngine.Json;
@@ -26,6 +26,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
     public class ActorEditor : ScriptingObjectEditor
     {
         private Guid _linkedPrefabId;
+        private UniformGridPanel _prefabButtonsGridPanel;
 
         /// <inheritdoc />
         protected override List<ItemInfo> GetItemsForType(ScriptType type)
@@ -68,34 +69,63 @@ namespace FlaxEditor.CustomEditors.Dedicated
                         // Display prefab UI (when displaying object inside Prefab Window then display only nested prefabs)
                         prefab.GetNestedObject(ref prefabObjectId, out var nestedPrefabId, out var nestedPrefabObjectId);
                         var nestedPrefab = FlaxEngine.Content.Load<Prefab>(nestedPrefabId);
-                        var panel = layout.UniformGrid();
-                        panel.CustomControl.Height = 20.0f;
-                        panel.CustomControl.SlotsVertically = 1;
-                        if (Presenter == Editor.Instance.Windows.PropertiesWin.Presenter || nestedPrefab)
+
+                        const float prefabButtonsHeight = 20.0f;
+                        PropertiesWindow propertiesWindow = Editor.Instance.Windows.PropertiesWin;
+                        _prefabButtonsGridPanel = new UniformGridPanel
+                        {
+                            Height = prefabButtonsHeight,
+                            SlotsVertically = 1,
+                            AnchorPreset = AnchorPresets.HorizontalStretchTop,
+                            SlotPadding = Margin.Zero,
+                        };
+
+                        if (Presenter == propertiesWindow.Presenter || nestedPrefab)
                         {
                             var targetPrefab = nestedPrefab ?? prefab;
-                            panel.CustomControl.SlotsHorizontally = 3;
 
-                            // Selecting actor prefab asset
-                            var selectPrefab = panel.Button("Select Prefab");
-                            selectPrefab.Button.Clicked += () =>
+                            var headerPanel = propertiesWindow.HeaderPanel;
+                            _prefabButtonsGridPanel.Parent = headerPanel;
+                            _prefabButtonsGridPanel.SlotsHorizontally = 3;
+                            
+                            propertiesWindow.ResizeHeaderPanel(headerPanel.Offsets.Bottom + prefabButtonsHeight);
+
+                            var selectPrefab = new Button
+                            {
+                                Text = "Select Prefab",
+                                ClipText = true,
+                                Parent = _prefabButtonsGridPanel,
+                            };
+                            selectPrefab.Clicked += () =>
                             {
                                 Editor.Instance.Windows.ContentWin.ClearItemsSearch();
                                 Editor.Instance.Windows.ContentWin.Select(targetPrefab);
                             };
 
                             // Edit selected prefab asset
-                            var editPrefab = panel.Button("Edit Prefab");
-                            editPrefab.Button.Clicked += () => Editor.Instance.Windows.ContentWin.Open(Editor.Instance.ContentDatabase.FindAsset(targetPrefab.ID));
+                            var editPrefab = new Button
+                            {
+                                Text = "Edit Prefab",
+                                ClipText = true,
+                                Parent = _prefabButtonsGridPanel,
+                            };
+                            editPrefab.Clicked += () => Editor.Instance.Windows.ContentWin.Open(Editor.Instance.ContentDatabase.FindAsset(targetPrefab.ID));
                         }
                         else
                         {
-                            panel.CustomControl.SlotsHorizontally = 1;
+                            _prefabButtonsGridPanel.SlotsHorizontally = 1;
                         }
 
                         // Viewing changes applied to this actor
-                        var viewChanges = panel.Button("View Changes");
-                        viewChanges.Button.Clicked += () => ViewChanges(viewChanges.Button, new Float2(0.0f, 20.0f));
+                        var viewChanges = new Button
+                        {
+                            Text = "View Changes",
+                            ClipText = true,
+                            Parent = _prefabButtonsGridPanel,
+                        };
+                        viewChanges.Clicked += () => ViewChanges(viewChanges, new Float2(0.0f, 20.0f));
+
+                        _prefabButtonsGridPanel.Bounds = new Rectangle(Utilities.Constants.UIMargin, Utilities.Constants.UIMargin, propertiesWindow.HeaderPanel.Width - 8, 20.0f);
 
                         // Link event to update editor on prefab apply
                         _linkedPrefabId = prefab.ID;
@@ -183,6 +213,15 @@ namespace FlaxEditor.CustomEditors.Dedicated
         protected override void Deinitialize()
         {
             base.Deinitialize();
+
+            // Remove prefab buttons only if they are not needed anymore
+            var actor = Values.Count == 1 ? Values[0] as Actor : null;
+            if (actor != null && !actor.HasPrefabLink && _prefabButtonsGridPanel != null)
+            {
+                _prefabButtonsGridPanel.Parent = null;
+                var propertiesPanel = Editor.Instance.Windows.PropertiesWin;
+                propertiesPanel.ResizeHeaderPanel(PropertiesWindow.DefaultHeaderPanelHeight);
+            }
 
             if (_linkedPrefabId != Guid.Empty)
             {
